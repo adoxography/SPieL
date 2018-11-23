@@ -1,4 +1,6 @@
-mamba==0.10
 numpy==1.15.4
 scikit-learn==0.20.0
-sklearn-crfsuite==0.9.6
+sklearn-crfsuite
+
+nose2
+noseOfYeti

@@ -9,3 +9,6 @@ ipython_config.py
 
 # Environments
 .venv
+
+# Testing
+nosetests.xml
