@@ -6,6 +6,7 @@ generated, and then apply those operations using arbitrary reference points
 instead of the original target.
 """
 from abc import ABCMeta, abstractmethod
+import re
 import numpy as np
 from mspl.util import flatten
 
@@ -88,6 +89,37 @@ def apply_operations(origin, reference, ops):
     return origin
 
 
+def annotate(origin, reference, ops, annotation=None):
+    """
+    Uses a list of operations to create an annotation for how the operations
+    should be applied, using an origin and a reference target
+
+    :param origin: The original iterable
+    :type origin: str or list
+    :param reference: The original target
+    :type reference: str or list
+    :ops: The operations to apply
+    :type ops: list of Operation
+    :param annotation: An optional initialization for the annotation. If none
+                       is provided, the annotation will be based on the
+                       origin. If one is provided, it will be modified by this
+                       method.
+    :return: An annotation based on the operations
+    :rtype: list of str
+    """
+    annotation = annotation or list(origin)
+
+    for oper in ops:
+        oper.annotate(annotation, origin, reference)
+
+    for i, label in reversed(list(enumerate(annotation))):
+        if label[0] == '+' and i > 0:
+            annotation[i-1] += label
+            del annotation[i]
+
+    return annotation
+
+
 def __build_matrix(origin, target):
     """
     Builds a Levenshtein matrix based on two iterables
@@ -157,6 +189,20 @@ class Operation(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def annotate(self, annotation, origin, reference):
+        """
+        Marks *annotation* as being modified by this operation
+
+        :param annotation: The annotation to mark
+        :type annotation: list of str
+        :param origin: The original iterable
+        :type origin: list or str
+        :param reference: The reference that this operation should modify toward
+        :type reference: list or str
+        """
+        pass
+
     def __eq__(self, other):
         return self.type == other.type \
             and self.origin_pos == other.origin_pos \
@@ -196,6 +242,21 @@ class ReplaceOperation(Operation):
             index = 0
         origin[index] = reference[self.target_pos]
 
+    def annotate(self, annotation, origin, reference):
+        """
+        Marks *annotation* as being modified by this operation
+
+        :param annotation: The annotation to mark
+        :type annotation: list of str
+        :param origin: The original iterable
+        :type origin: list or str
+        :param reference: The reference that this operation should modify toward
+        :type reference: list or str
+        """
+        origin_str = origin[self.origin_pos]
+        target_str = reference[self.target_pos]
+        annotation[self.origin_pos] += f"+R({origin_str},{target_str})"
+
     def __repr__(self):
         return f"Replace {self.origin_pos} with {self.target_pos}"
 
@@ -234,6 +295,20 @@ class InsertOperation(Operation):
         origin[index] = [origin[index],
                          reference[self.target_pos]]
 
+    def annotate(self, annotation, origin, reference):
+        """
+        Marks *annotation* as being modified by this operation
+
+        :param annotation: The annotation to mark
+        :type annotation: list of str
+        :param origin: The original iterable
+        :type origin: list or str
+        :param reference: The reference that this operation should modify toward
+        :type reference: list or str
+        """
+        target_str = reference[self.target_pos]
+        annotation[self.origin_pos] += f"+I({target_str})"
+
     def __repr__(self):
         return f"Insert {self.target_pos} at position {self.origin_pos}"
 
@@ -266,6 +341,25 @@ class DeleteOperation(Operation):
             origin = origin[index]
             index = 0
         origin[index] = None
+
+    def annotate(self, annotation, origin, reference):
+        """
+        Marks *annotation* as being modified by this operation
+
+        :param annotation: The annotation to mark
+        :type annotation: list of str
+        :param origin: The original iterable
+        :type origin: list or str
+        :param reference: The reference that this operation should modify toward
+        :type reference: list or str
+        """
+        origin_str = origin[self.origin_pos]
+        match = re.search(f'\+.*$', annotation[self.origin_pos])
+        if match:
+            tags = match[0]
+        else:
+            tags = ''
+        annotation[self.origin_pos] = f"+D({origin_str}){tags}"
 
     def __repr__(self):
         return f"Delete {self.origin_pos}"

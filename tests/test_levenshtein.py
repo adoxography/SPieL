@@ -92,6 +92,40 @@ describe 'apply_operations':
         assert output == 'fbo'
 
 
+describe 'annotate':
+    it 'does nothing if no operations are provided':
+        annotation = levenshtein.annotate(['f', 'o', 'o'], '', [])
+        assert annotation == ['f', 'o', 'o']
+
+    it 'adds multiple annotations':
+        operations = [
+            levenshtein.ReplaceOperation(0, 0),
+            levenshtein.InsertOperation(1, 2),
+            levenshtein.DeleteOperation(2)
+        ]
+        annotation = levenshtein.annotate(['f', 'o', 'o'], 'bar', operations)
+        assert annotation == ['f+R(f,b)', 'o+I(r)+D(o)']
+
+    it 'can annotate strings':
+        operations = [
+            levenshtein.ReplaceOperation(0, 0),
+            levenshtein.InsertOperation(1, 2),
+            levenshtein.DeleteOperation(2)
+        ]
+        annotation = levenshtein.annotate('foo', 'bar', operations)
+        assert annotation == ['f+R(f,b)', 'o+I(r)+D(o)']
+
+    it 'can use an alternate list as a starting point':
+        operations = [
+            levenshtein.ReplaceOperation(0, 0),
+            levenshtein.InsertOperation(1, 2),
+            levenshtein.DeleteOperation(2)
+        ]
+        annotation = ['b', 'a', 'z']
+        annotation = levenshtein.annotate('foo', 'bar', operations, annotation)
+        assert annotation == ['b+R(f,b)', 'a+I(r)+D(o)']
+
+
 describe 'ReplaceOperation':
     describe 'apply':
         it 'replaces a character in an origin list with a character in a reference list':
@@ -105,6 +139,12 @@ describe 'ReplaceOperation':
             origin = ['f', ['o', 'b'], 'a']
             operation.apply(origin, 'hello')
             assert origin == ['f', ['l', 'b'], 'a']
+
+        it 'annotates annotations':
+            operation = levenshtein.ReplaceOperation(0, 0)
+            annotation = ['f', 'o', 'o']
+            operation.annotate(annotation, 'foo', 'bar')
+            assert annotation == ['f+R(f,b)', 'o', 'o']
 
 
 describe 'InsertOperation':
@@ -121,6 +161,12 @@ describe 'InsertOperation':
             operation.apply(origin, 'hello')
             assert origin == ['f', [['o', 'l'], 'b'], 'a']
 
+        it 'annotates annotations':
+            operation = levenshtein.InsertOperation(1, 2)
+            annotation = ['f', 'o', 'o']
+            operation.annotate(annotation, 'foo', 'bar')
+            assert annotation == ['f', 'o+I(r)', 'o']
+
 
 describe 'DeleteOperation':
     describe 'apply':
@@ -135,3 +181,15 @@ describe 'DeleteOperation':
             origin = ['f', ['o', 'b'], 'a']
             operation.apply(origin)
             assert origin == ['f', [None, 'b'], 'a']
+
+        it 'annotates annotations':
+            operation = levenshtein.DeleteOperation(1)
+            annotation = ['b', 'a', 'r']
+            operation.annotate(annotation, 'bar', 'foo')
+            assert annotation == ['b', '+D(a)', 'r']
+
+        it 'annotates annotations when the affected segment has already been annotated':
+            operation = levenshtein.DeleteOperation(1)
+            annotation = ['b', 'a+I(f)', 'r']
+            operation.annotate(annotation, 'bar', 'foo')
+            assert annotation == ['b', '+D(a)+I(f)', 'r']
