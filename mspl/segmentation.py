@@ -87,3 +87,8 @@ def label_annotations(annotations, inside_label, tokenize=None):
                 labels.append(inside_label)
 
     return labels
+
+
+def pad(string, char, size):
+    pad_string = char * size
+    return pad_string + string + pad_string

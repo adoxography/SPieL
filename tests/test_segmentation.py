@@ -1,7 +1,7 @@
 # coding: spec
 
 import re
-from mspl.segmentation import Featurizer, concat_annotations, label_annotations
+from mspl.segmentation import Featurizer, concat_annotations, label_annotations, pad
 
 describe 'Featurizer':
     describe 'label':
@@ -95,3 +95,12 @@ describe 'label_annotations':
         tokenize = lambda x: list(re.findall(r'.\.?', x))
         labels = label_annotations(annotations, 'I', tokenize)
         assert labels == ['A', 'I', 'B', 'I']
+
+describe 'pad':
+    it 'adds a character to either side of a string':
+        padded = pad('foo', '_', 1)
+        assert padded == '_foo_'
+
+    it 'adds multiple characters to either side of a string':
+        padded = pad('foo', '_', 3)
+        assert padded == '___foo___'
