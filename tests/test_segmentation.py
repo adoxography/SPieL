@@ -1,9 +1,74 @@
 # coding: spec
 
 import re
-from mspl.segmentation import Featurizer, concat_annotations, label_annotations, pad
+from mspl.segmentation import (
+    Featurizer,
+    concat_annotations,
+    label_annotations,
+    pad
+)
 
 describe 'Featurizer':
+    describe 'convert':
+        it 'returns three training instances when given a single character':
+            featurizer = Featurizer()
+            shape = 'f'
+            labels = ['FOO']
+            instances = featurizer.convert(shape, labels)
+            assert instances == [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f__'}, '_+_+FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': '___'}, '_+FOO+_'),
+                ({'prefix': '__f', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+            ]
+
+        it 'returns four training instances when given two characters':
+            featurizer = Featurizer()
+            shape = 'fo'
+            labels = ['FOO', 'BAR']
+            instances = featurizer.convert(shape, labels)
+            assert instances == [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_+_+FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_+FOO+BAR'),
+                ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO+BAR+_'),
+                ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+            ]
+
+        it 'handles shapes when they are lists':
+            featurizer = Featurizer()
+            shape = ['f', 'oo']
+            labels = ['FOO', 'BAR']
+            instances = featurizer.convert(shape, labels)
+            assert instances == [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'foo_'}, '_+_+FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': 'oo__'}, '_+FOO+BAR'),
+                ({'prefix': '__f', 'focus': 'oo', 'suffix': '___'}, 'FOO+BAR+_'),
+                ({'prefix': '_foo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+            ]
+
+        it 'uses a tokenize function to separate shape tokens':
+            tokenize = lambda x: list(re.findall(r'.&?', x))
+            featurizer = Featurizer(tokenize=tokenize)
+            shape = 'f&'
+            labels = ['FOO']
+            instances = featurizer.convert(shape, labels)
+            assert instances == [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_+_+FOO'),
+                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_+FOO+_'),
+                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+            ]
+
+        it 'does not use the tokenize function on lists':
+            tokenize = lambda x: list(re.findall(r'.&?', x))
+            featurizer = Featurizer(tokenize=tokenize)
+            shape = ['f&']
+            labels = ['FOO']
+            instances = featurizer.convert(shape, labels)
+            assert instances == [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_+_+FOO'),
+                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_+FOO+_'),
+                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+            ]
+
     describe 'label':
         it 'returns an empty list if no tokens are provided':
             featurizer = Featurizer()
@@ -104,3 +169,7 @@ describe 'pad':
     it 'adds multiple characters to either side of a string':
         padded = pad('foo', '_', 3)
         assert padded == '___foo___'
+
+    it 'adds elements to either side of a list':
+        padded = pad(['f', 'oo'], '_', 3)
+        assert padded == ['_', '_', '_', 'f', 'oo', '_', '_', '_']
