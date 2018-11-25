@@ -8,6 +8,19 @@ from mspl import levenshtein
 from mspl.levenshtein import INSERT_SYMBOL
 
 
+class Segmenter:
+    def __init__(self, Classifier):
+        self.ClassifierType = Classifier
+        self.featurizer = Featurizer()
+        self.classifier = None
+
+    def train(self, instances):
+        self.classifier = self.ClassifierType.train(instances)
+
+    def segment(self, string):
+        return []
+
+
 class Featurizer:
     """
     Used to convert basic instances into training instances for a classifier

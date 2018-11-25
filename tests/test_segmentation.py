@@ -1,12 +1,45 @@
 # coding: spec
 
+from noseOfYeti.tokeniser.support import noy_sup_setUp
+import nose
+
 import re
 from mspl.segmentation import (
     Featurizer,
+    Segmenter,
     concat_annotations,
     label_annotations,
     pad
 )
+
+class DummyClassifier:
+    def __init__(self, instances):
+        self.instances = instances
+
+    @staticmethod
+    def train(data):
+        return DummyClassifier(data)
+
+
+describe 'Segmenter':
+    before_each:
+        instances = [
+            ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_+_+FOO'),
+            ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_+FOO+BAR'),
+            ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO+BAR+_'),
+            ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+        ]
+        self.segmenter = Segmenter(DummyClassifier)
+        self.segmenter.train(instances)
+
+    describe 'train':
+        it 'passes instances into an internal classifier':
+            assert len(self.segmenter.classifier.instances) == 4
+
+    describe 'segment':
+        it 'returns an empty list if an empty string is provided':
+            assert self.segmenter.segment('') == []
+            
 
 describe 'Featurizer':
     describe 'convert':
