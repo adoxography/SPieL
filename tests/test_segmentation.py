@@ -1,6 +1,6 @@
 # coding: spec
 
-from mspl.segmentation import Featurizer
+from mspl.segmentation import Featurizer, concat_annotations, label_annotations
 
 describe 'Featurizer':
     describe 'label':
@@ -44,3 +44,27 @@ describe 'Featurizer':
             annotations = [('baz', 'bar')]
             labels = featurizer.label('bazaa', annotations)
             assert labels == ['bar', 'I', 'I+I(a)+I(a)', 'I', 'I']
+
+describe 'concat_annotations':
+    it 'returns an empty string if no annotations are provided':
+        concat = concat_annotations([])
+        assert concat == ''
+
+    it 'returns a concatenated string of the first elements in a series of tuples':
+        concat = concat_annotations([('foo', ''), ('bar', '')])
+        assert concat == 'foobar'
+
+describe 'label_annotations':
+    it 'returns an empty list if no annotations are provided':
+        labels = label_annotations([], 'I')
+        assert labels == []
+
+    it 'returns the label of each annotation as the first label of each annotation':
+        annotations = [('f', 'A'), ('b', 'B')]
+        labels = label_annotations(annotations, 'I')
+        assert labels == ['A', 'B']
+
+    it 'uses the inside label for subsequent characters in an annotation':
+        annotations = [('foo', 'A'), ('bar', 'B')]
+        labels = label_annotations(annotations, 'I')
+        assert labels == ['A', 'I', 'I', 'B', 'I', 'I']
