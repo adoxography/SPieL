@@ -59,9 +59,10 @@ def label_annotations(annotations, inside_label):
     :rtype: list of str
     """
     labels = []
+    tokenize = list
 
     for shape, label in annotations:
-        for i, _ in enumerate(shape):
+        for i, _ in enumerate(tokenize(shape)):
             if i == 0:
                 labels.append(label)
             else:

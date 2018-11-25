@@ -68,3 +68,5 @@ describe 'label_annotations':
         annotations = [('foo', 'A'), ('bar', 'B')]
         labels = label_annotations(annotations, 'I')
         assert labels == ['A', 'I', 'I', 'B', 'I', 'I']
+
+    it 'tokenizes with an optional function'
