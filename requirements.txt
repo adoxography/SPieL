@@ -2,5 +2,5 @@ numpy==1.15.4
 scikit-learn==0.20.0
 sklearn-crfsuite
 
-nose2
+nose
 noseOfYeti
