@@ -22,6 +22,26 @@ describe 'Featurizer':
             labels = featurizer.label('foo', annotations)
             assert labels == ['bar', 'I', 'I']
 
+        it 'uses the character provided as the inside label to the featurizer':
+            featurizer = Featurizer(inside_label='FOO')
+            annotations = [('foo', 'bar')]
+            labels = featurizer.label('foo', annotations)
+            assert labels == ['bar', 'FOO', 'FOO']
+
+        it 'uses the function provided for tokenization':
+            tokenize = lambda x: list(re.findall(r'._?', x))
+            featurizer = Featurizer(tokenize=tokenize)
+            annotations = [('foo', 'bar')]
+            labels = featurizer.label('fo_', annotations)
+            assert labels == ['bar', 'I+R(o,o_)+D(o)']
+
+        it 'does not try to use the tokenization function when the input is a str':
+            tokenize = lambda x: list(re.findall(r'._?', x))
+            featurizer = Featurizer(tokenize=tokenize)
+            annotations = [('foo', 'bar')]
+            labels = featurizer.label(['f', 'o_'], annotations)
+            assert labels == ['bar', 'I+R(o,o_)+D(o)']
+
         it 'handles multiple labels':
             featurizer = Featurizer()
             annotations = [('foo', 'bar'), ('baz', 'boo')]

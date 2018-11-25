@@ -3,8 +3,19 @@ from mspl import levenshtein
 
 
 class Featurizer:
-    def __init__(self):
-        self.inside_label = 'I'
+    def __init__(self, inside_label='I', tokenize=None):
+        """
+        Initializes the featurizer
+
+        :param inside_label: The label to use for a character that does not
+                             begin a label
+        :type inside_label: str
+        :param tokenize: A function to tokenize incoming strings. Defaults to
+                         list()
+        :type tokenize: callable
+        """
+        self.inside_label = inside_label
+        self.tokenize = tokenize or list
 
     def label(self, shape, annotations):
         """
@@ -19,8 +30,11 @@ class Featurizer:
         :return: A list of labels
         :rtype: list
         """
-        annotation_string = concat_annotations(annotations)
-        labels = label_annotations(annotations, self.inside_label)
+        if isinstance(shape, str):
+            shape = self.tokenize(shape)
+        annotation_string = self.tokenize(concat_annotations(annotations))
+        labels = label_annotations(annotations, self.inside_label,
+                                   self.tokenize)
 
         ops = levenshtein.operations(annotation_string, shape)
         labels = levenshtein.annotate(annotation_string, shape, ops, labels)
