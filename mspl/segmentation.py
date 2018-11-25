@@ -1,5 +1,6 @@
 import re
 from mspl import levenshtein
+from mspl.levenshtein import INSERT_SYMBOL
 
 
 class Featurizer:
@@ -40,7 +41,7 @@ class Featurizer:
         labels = levenshtein.annotate(annotation_string, shape, ops, labels)
 
         for i, label in enumerate(labels):
-            matches = re.findall(r'\+I(.*?)', label)
+            matches = re.findall(rf'\+{INSERT_SYMBOL}(.*?)', label)
             for _ in matches:
                 labels.insert(i+1, self.inside_label)
 

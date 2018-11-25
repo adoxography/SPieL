@@ -10,6 +10,10 @@ import re
 import numpy as np
 from mspl.util import flatten
 
+INSERT_SYMBOL = 'I'
+DELETE_SYMBOL = 'D'
+REPLACE_SYMBOL = 'R'
+
 
 def distance(origin, target):
     """
@@ -198,7 +202,8 @@ class Operation(metaclass=ABCMeta):
         :type annotation: list of str
         :param origin: The original iterable
         :type origin: list or str
-        :param reference: The reference that this operation should modify toward
+        :param reference: The reference that this operation should modify
+                          toward
         :type reference: list or str
         """
         pass
@@ -250,12 +255,13 @@ class ReplaceOperation(Operation):
         :type annotation: list of str
         :param origin: The original iterable
         :type origin: list or str
-        :param reference: The reference that this operation should modify toward
+        :param reference: The reference that this operation should modify
+                          toward
         :type reference: list or str
         """
         origin_str = origin[self.origin_pos]
         target_str = reference[self.target_pos]
-        annotation[self.origin_pos] += f"+R({origin_str},{target_str})"
+        annotation[self.origin_pos] += f"+{REPLACE_SYMBOL}({origin_str},{target_str})"
 
     def __repr__(self):
         return f"Replace {self.origin_pos} with {self.target_pos}"
@@ -303,11 +309,12 @@ class InsertOperation(Operation):
         :type annotation: list of str
         :param origin: The original iterable
         :type origin: list or str
-        :param reference: The reference that this operation should modify toward
+        :param reference: The reference that this operation should modify
+                          toward
         :type reference: list or str
         """
         target_str = reference[self.target_pos]
-        annotation[self.origin_pos] += f"+I({target_str})"
+        annotation[self.origin_pos] += f"+{INSERT_SYMBOL}({target_str})"
 
     def __repr__(self):
         return f"Insert {self.target_pos} at position {self.origin_pos}"
@@ -350,16 +357,17 @@ class DeleteOperation(Operation):
         :type annotation: list of str
         :param origin: The original iterable
         :type origin: list or str
-        :param reference: The reference that this operation should modify toward
+        :param reference: The reference that this operation should modify
+                          toward
         :type reference: list or str
         """
         origin_str = origin[self.origin_pos]
-        match = re.search(f'\+.*$', annotation[self.origin_pos])
+        match = re.search(r'\+.*$', annotation[self.origin_pos])
         if match:
             tags = match[0]
         else:
             tags = ''
-        annotation[self.origin_pos] = f"+D({origin_str}){tags}"
+        annotation[self.origin_pos] = f"+{DELETE_SYMBOL}({origin_str}){tags}"
 
     def __repr__(self):
         return f"Delete {self.origin_pos}"
