@@ -95,14 +95,14 @@ describe 'Featurizer':
 
         it 'uses the function provided for tokenization':
             tokenize = lambda x: list(re.findall(r'._?', x))
-            featurizer = Featurizer(tokenize=tokenize)
+            featurizer = Featurizer(mode='full', tokenize=tokenize)
             annotations = [('foo', 'bar')]
             labels = featurizer.label('fo_', annotations)
             assert labels == ['bar', 'I+R(o,o_)+D(o)']
 
         it 'does not try to use the tokenization function when the input is a str':
             tokenize = lambda x: list(re.findall(r'._?', x))
-            featurizer = Featurizer(tokenize=tokenize)
+            featurizer = Featurizer(mode='full', tokenize=tokenize)
             annotations = [('foo', 'bar')]
             labels = featurizer.label(['f', 'o_'], annotations)
             assert labels == ['bar', 'I+R(o,o_)+D(o)']
@@ -114,22 +114,34 @@ describe 'Featurizer':
             assert labels == ['bar', 'I', 'I', 'boo', 'I', 'I']
 
         it 'handles single morphemes when the shape has a deleted character':
-            featurizer = Featurizer()
+            featurizer = Featurizer(mode='full')
             annotations = [('baz', 'bar')]
             labels = featurizer.label('ba', annotations)
             assert labels == ['bar', 'I+D(z)']
 
         it 'handles single morphemes when the shape has an inserted character':
-            featurizer = Featurizer()
+            featurizer = Featurizer(mode='full')
             annotations = [('baz', 'bar')]
             labels = featurizer.label('baza', annotations)
             assert labels == ['bar', 'I', 'I+I(a)', 'I']
 
         it 'handles single morphemes when the shape has multiple inserted characters':
-            featurizer = Featurizer()
+            featurizer = Featurizer(mode='full')
             annotations = [('baz', 'bar')]
             labels = featurizer.label('bazaa', annotations)
             assert labels == ['bar', 'I', 'I+I(a)+I(a)', 'I', 'I']
+
+        it 'can remove operation directions':
+            featurizer = Featurizer(mode='normal')
+            annotations = [('foo', 'bar'), ('baz', 'boo')]
+            labels = featurizer.label('fooba', annotations)
+            assert labels == ['bar', 'I', 'I', 'boo', 'I']
+
+        it 'can reduce labels down to B/I/O':
+            featurizer = Featurizer(mode='basic')
+            annotations = [('foo', 'bar'), ('baz', 'boo')]
+            labels = featurizer.label('fooba', annotations)
+            assert labels == ['B', 'I', 'I', 'B', 'I']
 
 describe 'concat_annotations':
     it 'returns an empty string if no annotations are provided':

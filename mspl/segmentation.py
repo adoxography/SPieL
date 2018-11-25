@@ -12,19 +12,27 @@ class Featurizer:
     """
     Used to convert basic instances into training instances for a classifier
     """
-    def __init__(self, inside_label='I', tokenize=None):
+    def __init__(self, mode='normal', inside_label='I', pad_token='_',
+                 tokenize=None):
         """
         Initializes the featurizer
 
+        :param mode: The labelling mode to use; one of 'basic', 'normal', or
+                     'full'
+        :type mode: str
         :param inside_label: The label to use for a character that does not
-                             begin a label
+                             begin a label; default 'I'
         :type inside_label: str
+        :param pad_token: The token to pad strings with; default '_'
+        :type pade_token: str
         :param tokenize: A function to tokenize incoming strings. Defaults to
                          list()
         :type tokenize: callable
         """
         self.inside_label = inside_label
+        self.pad_token = pad_token
         self.tokenize = tokenize or list
+        self.mode = mode
 
     def convert(self, shape, labels):
         """
@@ -45,8 +53,8 @@ class Featurizer:
         if not len(shape) == len(labels):
             raise RuntimeError
 
-        padded_shape = pad(shape, '_', 4)
-        padded_labels = pad(labels, '_', 4)
+        padded_shape = pad(shape, self.pad_token, 4)
+        padded_labels = pad(labels, self.pad_token, 4)
         instances = []
 
         for i in range(3, len(padded_shape) - 3):
@@ -89,7 +97,22 @@ class Featurizer:
             for _ in matches:
                 labels.insert(i+1, self.inside_label)
 
+        if self.mode in ['basic', 'normal']:
+            # Get rid of any operator directives
+            labels = [re.match(r'^[^+]*', label)[0] for label in labels]
+
+        if self.mode == 'basic':
+            # Convert all labels to B/I/O scheme
+            labels = [self.__simplify_label(label) for label in labels]
+
         return labels
+
+    def __simplify_label(self, label):
+        if label == self.pad_token:
+            return 'O'
+        if label == self.inside_label:
+            return 'I'
+        return 'B'
 
 
 def concat_annotations(annotations):
