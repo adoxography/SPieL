@@ -46,7 +46,7 @@ def concat_annotations(annotations):
     return ''.join([shape for shape, _ in annotations])
 
 
-def label_annotations(annotations, inside_label):
+def label_annotations(annotations, inside_label, tokenize=None):
     """
     Creates a list of labels for each character in a list of annotations
 
@@ -55,11 +55,14 @@ def label_annotations(annotations, inside_label):
     :type annotations: list of (str, str)
     :param inside_label: The label to use for characters that do not begin an
                          annotation
+    :param tokenize: The function that should be used to tokenize the
+                     annotation shapes. Defaults to calling list()
+    :type tokenize: callable
     :return: A list of labels for the combined annotations
     :rtype: list of str
     """
     labels = []
-    tokenize = list
+    tokenize = tokenize or list
 
     for shape, label in annotations:
         for i, _ in enumerate(tokenize(shape)):

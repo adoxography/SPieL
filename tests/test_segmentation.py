@@ -1,5 +1,6 @@
 # coding: spec
 
+import re
 from mspl.segmentation import Featurizer, concat_annotations, label_annotations
 
 describe 'Featurizer':
@@ -69,4 +70,8 @@ describe 'label_annotations':
         labels = label_annotations(annotations, 'I')
         assert labels == ['A', 'I', 'I', 'B', 'I', 'I']
 
-    it 'tokenizes with an optional function'
+    it 'uses a provided function for tokenization':
+        annotations = [('fo.', 'A'), ('b.r', 'B')]
+        tokenize = lambda x: list(re.findall(r'.\.?', x))
+        labels = label_annotations(annotations, 'I', tokenize)
+        assert labels == ['A', 'I', 'B', 'I']
