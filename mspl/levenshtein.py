@@ -1,4 +1,6 @@
 """
+mspl.levenshtein
+
 Implementation of Levenshtein distance and related functionality. This module
 is designed to accept any list of comparables instead of just strings, create
 lists of operations that are independent of the contexts from which they were

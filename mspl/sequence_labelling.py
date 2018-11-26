@@ -1,4 +1,9 @@
-from util import flatten
+"""
+mspl.sequence_labelling
+
+Module for labelling morphemes
+"""
+import pickle
 
 from scipy.stats import expon
 from sklearn.metrics import make_scorer
@@ -6,7 +11,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn_crfsuite import CRF
 from sklearn_crfsuite.metrics import flat_f1_score
 
-import pickle
+from util import flatten
 
 
 DEFAULT_ALGORITHM = 'lbfgs'
@@ -17,6 +22,9 @@ DEFAULT_ALL_POSSIBLE_TRANSITIONS = True
 
 
 class SequenceLabeller:
+    """
+    Labels morphemes using an underlying CRF classifier
+    """
     def __init__(self, model):
         """
         Initializes the classifier

@@ -2,161 +2,12 @@
 
 from unittest import TestCase
 import re
-from mspl.segmentation import (
+from mspl.segmentation.features import (
     Featurizer,
-    Segmenter,
-    Constraint,
-    ClassifierAdaptor,
-    SegmentationException,
     FeaturizationException,
     concat_annotations,
-    label_annotations,
-    generate_constraints,
-    generate_options,
-    pad
+    label_annotations
 )
-
-class DummyClassifier(ClassifierAdaptor):
-    def __init__(self, instances):
-        self.instances = instances
-
-    @staticmethod
-    def train(data):
-        return DummyClassifier(data)
-
-    def prob_classify(self, features):
-        table = {
-            '____fo_': [
-                ('_-_-FOO', .9),
-                ('_-FOO-BAR', .02),
-                ('FOO-BAR-_', .03),
-                ('BAR-_-_', 0.5)
-            ],
-            '___fo__': [
-                ('_-_-FOO', .03),
-                ('_-FOO-BAR', .92),
-                ('FOO-BAR-_', .04),
-                ('BAR-_-_', 0.01)
-            ],
-            '__fo___': [
-                ('_-_-FOO', .03),
-                ('_-FOO-BAR', .015),
-                ('FOO-BAR-_', .95),
-                ('BAR-_-_', 0.005)
-            ],
-            '_fo____': [
-                ('_-_-FOO', .001),
-                ('_-FOO-BAR', .009),
-                ('FOO-BAR-_', .08),
-                ('BAR-_-_', 0.91)
-            ]
-        }
-        lookup = features['prefix']+features['focus']+features['suffix']
-        if lookup in table:
-            return table[lookup]
-        return  [
-            ('_-_-FOO', .23),
-            ('_-FOO-BAR', .24),
-            ('FOO-BAR-_', .26),
-            ('BAR-_-_', 0.27)
-        ]
-
-
-describe TestCase 'Segmenter':
-    before_each:
-        instances = [
-            ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_-_-FOO'),
-            ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_-FOO-BAR'),
-            ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
-            ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
-        ]
-        self.segmenter = Segmenter(DummyClassifier)
-        self.segmenter.train(instances)
-
-    describe 'train':
-        it 'passes instances into an internal classifier':
-            self.assertEqual(len(self.segmenter.classifier.instances),  4)
-
-    describe 'segment':
-        it 'raises an error if the segmenter has not already been trained':
-            segmenter = Segmenter(DummyClassifier)
-            with self.assertRaises(SegmentationException):
-                segmenter.segment('foo')
-
-        it 'returns an empty list if an empty string is provided':
-            self.assertEqual(self.segmenter.segment(''), [])
-
-        it 'finds the most likely sequence of labels':
-            labels = self.segmenter.segment('fo')
-            self.assertEqual(labels, ['FOO', 'BAR'])
-
-
-describe TestCase 'generate_constraints':
-    it 'generates constraints for a feature set':
-        distribution = [
-            ('_-_-FOO', .9),
-            ('_-FOO-BAR', .02),
-            ('FOO-BAR-_', .03),
-            ('BAR-_-_', 0.5)
-        ]
-        constraints = generate_constraints(distribution, 3)
-
-        target = {
-            Constraint((2, 5), '_-_-FOO'): 0.9,
-            Constraint((2, 3), '_'): 0.92,
-            Constraint((3, 4), '_'): 1.4,
-            Constraint((4, 5), 'FOO'): 0.9,
-            Constraint((2, 4), '_-_'): 0.9,
-            Constraint((3, 5), '_-FOO'): 0.9
-        }
-
-        self.assertEqual(constraints, target)
-
-
-describe TestCase 'generate_options':
-    it 'returns a list with six more elements than the string passed in':
-        constraints = {
-            Constraint((0, 3), '_-_-FOO'): 0.9,
-            Constraint((0, 1), '_'): 0.92,
-            Constraint((1, 2), '_'): 1.4,
-            Constraint((2, 3), 'FOO'): 0.9,
-            Constraint((0, 2), '_-_'): 0.9,
-            Constraint((1, 3), '_-FOO'): 0.9
-        }
-        options = generate_options('foo', constraints)
-        self.assertEqual(len(options), 9)
-
-    it 'inserts an underscore if no constraint matches an index':
-        constraints = {
-            Constraint((1, 2), '_'): 1.4,
-            Constraint((2, 3), 'FOO'): 0.9,
-            Constraint((1, 3), '_-FOO'): 0.9
-        }
-        options = generate_options('foo', constraints)
-        self.assertEqual(options[0], set('_'))
-
-    it 'returns a list of sets of options based on the constraints':
-        constraints = {
-            Constraint((0, 3), '_-_-FOO'): 0.9,
-            Constraint((0, 1), '_'): 0.92,
-            Constraint((1, 2), '_'): 1.4,
-            Constraint((2, 3), 'FOO'): 0.9,
-            Constraint((0, 2), '_-_'): 0.9,
-            Constraint((1, 3), '_-FOO'): 0.9,
-            Constraint((1, 3), '_-BAR'): 0.9
-        }
-        options = generate_options('foo', constraints)
-        self.assertEqual(options, [
-            set('_'),
-            set('_'),
-            set(['FOO', 'BAR']),
-            set('_'),
-            set('_'),
-            set('_'),
-            set('_'),
-            set('_'),
-            set('_')
-        ])
 
 
 describe TestCase 'Featurizer':
@@ -339,6 +190,7 @@ describe TestCase 'concat_annotations':
         concat = concat_annotations([('foo', ''), ('bar', '')])
         self.assertEqual(concat, 'foobar')
 
+
 describe TestCase 'label_annotations':
     it 'returns an empty list if no annotations are provided':
         labels = label_annotations([], 'I')
@@ -359,17 +211,3 @@ describe TestCase 'label_annotations':
         tokenize = lambda x: list(re.findall(r'.\.?', x))
         labels = label_annotations(annotations, 'I', tokenize)
         self.assertEqual(labels, ['A', 'I', 'B', 'I'])
-
-
-describe TestCase 'pad':
-    it 'adds a character to either side of a string':
-        padded = pad('foo', '_', 1)
-        self.assertEqual(padded, '_foo_')
-
-    it 'adds multiple characters to either side of a string':
-        padded = pad('foo', '_', 3)
-        self.assertEqual(padded, '___foo___')
-
-    it 'adds elements to either side of a list':
-        padded = pad(['f', 'oo'], '_', 3)
-        self.assertEqual(padded, ['_', '_', '_', 'f', 'oo', '_', '_', '_'])

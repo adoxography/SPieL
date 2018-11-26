@@ -1,6 +1,6 @@
 # coding: spec
 from unittest import TestCase
-from mspl.util import all_permutations
+from mspl.util import all_permutations, pad
 
 
 describe TestCase 'all_permutations':
@@ -17,3 +17,17 @@ describe TestCase 'all_permutations':
             ['b', 'c', 'f'],
             ['b', 'd', 'f']
         ])
+
+
+describe TestCase 'pad':
+    it 'adds a character to either side of a string':
+        padded = pad('foo', '_', 1)
+        self.assertEqual(padded, '_foo_')
+
+    it 'adds multiple characters to either side of a string':
+        padded = pad('foo', '_', 3)
+        self.assertEqual(padded, '___foo___')
+
+    it 'adds elements to either side of a list':
+        padded = pad(['f', 'oo'], '_', 3)
+        self.assertEqual(padded, ['_', '_', '_', 'f', 'oo', '_', '_', '_'])
