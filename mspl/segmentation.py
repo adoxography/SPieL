@@ -4,9 +4,11 @@ segmentation.py
 Contains logic for segmenting shapes into morphemes
 """
 import re
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from mspl import levenshtein
 from mspl.levenshtein import INSERT_SYMBOL
+from mspl.util import all_permutations
 
 
 class SegmentationException(Exception):
@@ -17,10 +19,61 @@ class FeaturizationException(Exception):
     """Raises for an error in segmentation"""
 
 
+class ClassifierAdaptor(metaclass=ABCMeta):
+    """
+    Adaptor interface to allow a classifier to be used by the segmenter
+    """
+    @abstractmethod
+    def prob_classify(self, features):
+        """
+        Gives back all of the labels and their corresponding probabilities
+        based on the provided features
+
+        :param features: The features to classify
+        :type features: dict
+        :return: The available labels and their corresponding probabilities
+        :rtype: dict of str => float
+        """
+
+    @staticmethod
+    @abstractmethod
+    def train(data):
+        """
+        Initializes a new instance of the classifier, using the data to train
+        on
+
+        :param data: The data to train the classifier with
+        :type data: list of (dict, str)
+        :return: An instance of this class
+        """
+
+
 class Constraint:
+    """
+    Represents a constraint on a sequence
+    """
     def __init__(self, span, label):
+        """
+        Initializes the constraint
+
+        :param span: The start and one past the end of the span constrained
+        :type span: (int, int)
+        :param label: The label of this constraint
+        :type label: str
+        """
         self.span = span
         self.label = label
+
+    def is_satisfied(self, sequence):
+        """
+        Determines if a sequence is satisfied by this constraint
+
+        :param sequence: The sequence to check
+        :type sequence: list of str
+        :rtype: bool
+        """
+        segment = '-'.join(sequence[self.span[0]:self.span[1]])
+        return self.label == segment
 
     def __repr__(self):
         return f"{self.span}->{self.label}"
@@ -34,14 +87,28 @@ class Constraint:
 
 class Segmenter:
     def __init__(self, Classifier):
-        self.ClassifierType = Classifier
+        self.classifier_type = Classifier
         self.featurizer = Featurizer()
         self.classifier = None
 
     def train(self, instances):
-        self.classifier = self.ClassifierType.train(instances)
+        """
+        Trains the underlying classifier
+
+        :param instances: The instances to use to train the classifier
+        :type instances: list of (dict, str)
+        """
+        self.classifier = self.classifier_type.train(instances)
 
     def segment(self, string):
+        """
+        Segments a string into morphemes
+
+        :param string: The string to segment
+        :type string: str
+        :return: A list of morphemes
+        :rtype: list of str
+        """
         if self.classifier is None:
             raise SegmentationException("The segmenter has not been trained")
 
@@ -50,66 +117,100 @@ class Segmenter:
 
         for i, feature in enumerate(features):
             distribution = self.classifier.prob_classify(feature)
-            constraints.update(self.generate_constraints(distribution, i+1))
+            constraints.update(generate_constraints(distribution, i+2))
 
-        return []
+        options = generate_options(string, constraints)
+        solutions = all_permutations(options)
 
-    def generate_constraints(self, distribution, index):
-        """
-        Generates constraints for *distribution*
+        optimal_solution = find_optimal_solution(solutions, constraints)
+        return optimal_solution[3:-3]
 
-        :param distribution: A probability distribution of label/probability
-                             pairs
-        :type distribution: dict of str => float
-        :param index: The index that the distribution came from
-        :type index: int
-        :return: The constraints that were extracted from the distribution
-        :rtype: dict of Constraint => float
-        """
-        constraints = defaultdict(float)
 
-        tg_label, tg_weight = max(distribution, key=lambda x: x[1])
-        tg_constraint = Constraint((index-1, index+2), tg_label)
-        constraints[tg_constraint] = tg_weight
+def generate_constraints(distribution, index):
+    """
+    Generates constraints for *distribution*
 
-        pre_label, foc_label, suf_label = tg_label.split('-')
-        pre_bg_label = pre_label + '-' + foc_label
-        suf_bg_label = foc_label + '-' + suf_label
+    :param distribution: A probability distribution of label/probability
+                         pairs
+    :type distribution: dict of str => float
+    :param index: The index that the distribution came from
+    :type index: int
+    :return: The constraints that were extracted from the distribution
+    :rtype: dict of Constraint => float
+    """
+    constraints = defaultdict(float)
 
-        pre_ug_constraint = Constraint((index-1, index), pre_label)
-        foc_ug_constraint = Constraint((index, index+1), foc_label)
-        suf_ug_constraint = Constraint((index+1, index+2), suf_label)
-        pre_bg_constraint = Constraint((index-1, index+1), pre_bg_label)
-        suf_bg_constraint = Constraint((index, index+2), suf_bg_label)
+    tg_label, tg_weight = max(distribution, key=lambda x: x[1])
+    tg_constraint = Constraint((index-1, index+2), tg_label)
+    constraints[tg_constraint] = tg_weight
 
-        for label, weight in distribution:
-            if re.search('^%s-' % re.escape(pre_label), label):
-                constraints[pre_ug_constraint] += weight
-            if re.search('-%s-' % re.escape(foc_label), label):
-                constraints[foc_ug_constraint] += weight
-            if re.search('-%s$' % re.escape(suf_label), label):
-                constraints[suf_ug_constraint] += weight
-            if re.search('^%s-' % re.escape(pre_bg_label), label):
-                constraints[pre_bg_constraint] += weight
-            if re.search('-%s$' % re.escape(suf_bg_label), label):
-                constraints[suf_bg_constraint] += weight
+    pre_label, foc_label, suf_label = tg_label.split('-')
+    pre_bg_label = pre_label + '-' + foc_label
+    suf_bg_label = foc_label + '-' + suf_label
 
-        return constraints
+    pre_ug_constraint = Constraint((index-1, index), pre_label)
+    foc_ug_constraint = Constraint((index, index+1), foc_label)
+    suf_ug_constraint = Constraint((index+1, index+2), suf_label)
+    pre_bg_constraint = Constraint((index-1, index+1), pre_bg_label)
+    suf_bg_constraint = Constraint((index, index+2), suf_bg_label)
 
-    def generate_options(self, string, constraints):
-        options = [set() for _ in range(len(string) + 2)]
+    for label, weight in distribution:
+        if re.search('^%s-' % re.escape(pre_label), label):
+            constraints[pre_ug_constraint] += weight
+        if re.search('-%s-' % re.escape(foc_label), label):
+            constraints[foc_ug_constraint] += weight
+        if re.search('-%s$' % re.escape(suf_label), label):
+            constraints[suf_ug_constraint] += weight
+        if re.search('^%s-' % re.escape(pre_bg_label), label):
+            constraints[pre_bg_constraint] += weight
+        if re.search('-%s$' % re.escape(suf_bg_label), label):
+            constraints[suf_bg_constraint] += weight
 
-        for constraint in constraints:
-            labels = constraint.label.split('-')
-            for i, label in enumerate(labels):
-                index = constraint.span[0] + i
-                options[index].add(label)
+    return constraints
 
-        for option in options:
-            if not option:
-                option.add('_')
 
-        return options
+def generate_options(sequence, constraints):
+    """
+    Generates options for each element of *sequence*, based on *constraints*
+
+    :param seqence: The sequence to generate options for
+    :type sequence: list or str
+    :param constraints: The constraints to base the options on
+    :type constraints: list of Constraint
+    :return: A list of options
+    :rtype: list of set of str
+    """
+    options = [set() for _ in range(len(sequence) + 6)]
+
+    for constraint in constraints:
+        labels = constraint.label.split('-')
+        for i, label in enumerate(labels):
+            index = constraint.span[0] + i
+            options[index].add(label)
+
+    for option in options:
+        if not option:
+            option.add('_')
+
+    return options
+
+
+def find_optimal_solution(solutions, constraints):
+    """
+    Finds the optimal solution given a list of solutions and a list of
+    constraints
+    """
+    weighted_solutions = []
+
+    for solution in solutions:
+        value = 0
+        for constraint, weight in constraints.items():
+            if constraint.is_satisfied(solution):
+                value += weight
+        weighted_solutions.append((solution, value))
+
+    best_solution, _ = max(weighted_solutions, key=lambda x: x[1])
+    return best_solution
 
 
 class Featurizer:
@@ -161,7 +262,8 @@ but {len(labels)} labels provided")
         features = self.convert_features(shape)
 
         padded_labels = pad(labels, self.pad_token, 4)
-        instances = ['-'.join(padded_labels[i-1:i+2]) for i in range(3, len(padded_labels) - 3)]
+        instances = ['-'.join(padded_labels[i-1:i+2])
+                     for i in range(3, len(padded_labels) - 3)]
 
         return list(zip(features, instances))
 
@@ -176,6 +278,9 @@ but {len(labels)} labels provided")
                  instance
         :rtype: list of dict
         """
+        if not shape:
+            return []
+
         if isinstance(shape, str):
             shape = self.tokenize(shape)
 
@@ -191,7 +296,7 @@ but {len(labels)} labels provided")
 
             instances.append(features)
 
-        return instances 
+        return instances
 
     def label(self, shape, annotations):
         """

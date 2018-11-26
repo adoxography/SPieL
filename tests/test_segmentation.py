@@ -6,14 +6,17 @@ from mspl.segmentation import (
     Featurizer,
     Segmenter,
     Constraint,
+    ClassifierAdaptor,
     SegmentationException,
     FeaturizationException,
     concat_annotations,
     label_annotations,
+    generate_constraints,
+    generate_options,
     pad
 )
 
-class DummyClassifier:
+class DummyClassifier(ClassifierAdaptor):
     def __init__(self, instances):
         self.instances = instances
 
@@ -83,67 +86,77 @@ describe TestCase 'Segmenter':
         it 'returns an empty list if an empty string is provided':
             self.assertEqual(self.segmenter.segment(''), [])
 
-    describe 'generate_constraints':
-        it 'generates constraints for a feature set':
-            distribution = [
-                ('_-_-FOO', .9),
-                ('_-FOO-BAR', .02),
-                ('FOO-BAR-_', .03),
-                ('BAR-_-_', 0.5)
-            ]
-            constraints = self.segmenter.generate_constraints(distribution, 3)
+        it 'finds the most likely sequence of labels':
+            labels = self.segmenter.segment('fo')
+            self.assertEqual(labels, ['FOO', 'BAR'])
 
-            target = {
-                Constraint((2, 5), '_-_-FOO'): 0.9,
-                Constraint((2, 3), '_'): 0.92,
-                Constraint((3, 4), '_'): 1.4,
-                Constraint((4, 5), 'FOO'): 0.9,
-                Constraint((2, 4), '_-_'): 0.9,
-                Constraint((3, 5), '_-FOO'): 0.9
-            }
 
-            self.assertEqual(constraints, target)
+describe TestCase 'generate_constraints':
+    it 'generates constraints for a feature set':
+        distribution = [
+            ('_-_-FOO', .9),
+            ('_-FOO-BAR', .02),
+            ('FOO-BAR-_', .03),
+            ('BAR-_-_', 0.5)
+        ]
+        constraints = generate_constraints(distribution, 3)
 
-    describe 'generate_options':
-        it 'returns a list with two more elements than the string passed in':
-            constraints = {
-                Constraint((0, 3), '_-_-FOO'): 0.9,
-                Constraint((0, 1), '_'): 0.92,
-                Constraint((1, 2), '_'): 1.4,
-                Constraint((2, 3), 'FOO'): 0.9,
-                Constraint((0, 2), '_-_'): 0.9,
-                Constraint((1, 3), '_-FOO'): 0.9
-            }
-            options = self.segmenter.generate_options('foo', constraints)
-            self.assertEqual(len(options), 5)
+        target = {
+            Constraint((2, 5), '_-_-FOO'): 0.9,
+            Constraint((2, 3), '_'): 0.92,
+            Constraint((3, 4), '_'): 1.4,
+            Constraint((4, 5), 'FOO'): 0.9,
+            Constraint((2, 4), '_-_'): 0.9,
+            Constraint((3, 5), '_-FOO'): 0.9
+        }
 
-        it 'inserts an underscore if no constraint matches an index':
-            constraints = {
-                Constraint((1, 2), '_'): 1.4,
-                Constraint((2, 3), 'FOO'): 0.9,
-                Constraint((1, 3), '_-FOO'): 0.9
-            }
-            options = self.segmenter.generate_options('foo', constraints)
-            self.assertEqual(options[0], set('_'))
+        self.assertEqual(constraints, target)
 
-        it 'returns a list of sets of options based on the constraints':
-            constraints = {
-                Constraint((0, 3), '_-_-FOO'): 0.9,
-                Constraint((0, 1), '_'): 0.92,
-                Constraint((1, 2), '_'): 1.4,
-                Constraint((2, 3), 'FOO'): 0.9,
-                Constraint((0, 2), '_-_'): 0.9,
-                Constraint((1, 3), '_-FOO'): 0.9,
-                Constraint((1, 3), '_-BAR'): 0.9
-            }
-            options = self.segmenter.generate_options('foo', constraints)
-            self.assertEqual(options, [
-                set('_'),
-                set('_'),
-                set(['FOO', 'BAR']),
-                set('_'),
-                set('_')
-            ])
+
+describe TestCase 'generate_options':
+    it 'returns a list with six more elements than the string passed in':
+        constraints = {
+            Constraint((0, 3), '_-_-FOO'): 0.9,
+            Constraint((0, 1), '_'): 0.92,
+            Constraint((1, 2), '_'): 1.4,
+            Constraint((2, 3), 'FOO'): 0.9,
+            Constraint((0, 2), '_-_'): 0.9,
+            Constraint((1, 3), '_-FOO'): 0.9
+        }
+        options = generate_options('foo', constraints)
+        self.assertEqual(len(options), 9)
+
+    it 'inserts an underscore if no constraint matches an index':
+        constraints = {
+            Constraint((1, 2), '_'): 1.4,
+            Constraint((2, 3), 'FOO'): 0.9,
+            Constraint((1, 3), '_-FOO'): 0.9
+        }
+        options = generate_options('foo', constraints)
+        self.assertEqual(options[0], set('_'))
+
+    it 'returns a list of sets of options based on the constraints':
+        constraints = {
+            Constraint((0, 3), '_-_-FOO'): 0.9,
+            Constraint((0, 1), '_'): 0.92,
+            Constraint((1, 2), '_'): 1.4,
+            Constraint((2, 3), 'FOO'): 0.9,
+            Constraint((0, 2), '_-_'): 0.9,
+            Constraint((1, 3), '_-FOO'): 0.9,
+            Constraint((1, 3), '_-BAR'): 0.9
+        }
+        options = generate_options('foo', constraints)
+        self.assertEqual(options, [
+            set('_'),
+            set('_'),
+            set(['FOO', 'BAR']),
+            set('_'),
+            set('_'),
+            set('_'),
+            set('_'),
+            set('_'),
+            set('_')
+        ])
 
 
 describe TestCase 'Featurizer':
@@ -215,10 +228,14 @@ describe TestCase 'Featurizer':
                 featurizer.convert_pairs(shape, labels)
 
     describe 'convert_features':
+        it 'returns an empty list when given an empty string':
+            featurizer = Featurizer()
+            instances = featurizer.convert_features('')
+            self.assertEqual(instances, [])
+
         it 'returns three training instances when given a single character':
             featurizer = Featurizer()
             shape = 'f'
-            labels = ['FOO']
             instances = featurizer.convert_features(shape)
             self.assertEqual(instances, [
                 {'prefix': '___', 'focus': '_', 'suffix': 'f__'},
