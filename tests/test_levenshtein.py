@@ -1,8 +1,8 @@
 # coding: spec
 
 from unittest import TestCase
-from mspl import levenshtein
-from mspl.levenshtein import DeleteOperation, InsertOperation, ReplaceOperation
+from spiel import levenshtein
+from spiel.levenshtein import DeleteOperation, InsertOperation, ReplaceOperation
 
 
 describe TestCase 'distance':

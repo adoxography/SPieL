@@ -1,6 +1,6 @@
 # coding: spec
 from unittest import TestCase
-from mspl.util import all_permutations, pad
+from spiel.util import all_permutations, pad
 
 
 describe TestCase 'all_permutations':

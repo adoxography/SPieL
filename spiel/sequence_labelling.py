@@ -1,5 +1,5 @@
 """
-mspl.sequence_labelling
+spiel.sequence_labelling
 
 Module for labelling morphemes
 """
@@ -11,7 +11,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn_crfsuite import CRF
 from sklearn_crfsuite.metrics import flat_f1_score
 
-from mspl.util import flatten
+from spiel.util import flatten
 
 
 DEFAULT_ALGORITHM = 'lbfgs'

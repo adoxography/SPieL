@@ -1,2 +1,2 @@
-# MSPL
-Morpheme segmentation of polysynthetic languages
+# SPieL
+Segmentation of Polysynthetic Languages

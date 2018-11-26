@@ -1,12 +1,12 @@
 """
-mspl.segmentation.features
+spiel.segmentation.features
 
 Handles featurization of strings for segmenters
 """
 import re
-from mspl import levenshtein
-from mspl.levenshtein import INSERT_SYMBOL
-from mspl.util import pad
+from spiel import levenshtein
+from spiel.levenshtein import INSERT_SYMBOL
+from spiel.util import pad
 
 
 class FeaturizationException(Exception):

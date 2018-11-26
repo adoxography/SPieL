@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 import re
-from mspl.segmentation.features import (
+from spiel.segmentation.features import (
     Featurizer,
     FeaturizationException,
     concat_annotations,

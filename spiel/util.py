@@ -1,7 +1,7 @@
 """
-mspl.util
+spiel.util
 
-Utility methods for MSPL
+Utility methods for SPieL
 """
 import collections
 

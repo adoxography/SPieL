@@ -1,12 +1,12 @@
 """
-mspl.segmentation.constraints
+spiel.segmentation.constraints
 
 Module for segmenting strings based on constraints
 """
 import re
 from collections import defaultdict
-from mspl.segmentation.features import Featurizer
-from mspl.util import all_permutations
+from spiel.segmentation.features import Featurizer
+from spiel.util import all_permutations
 
 
 class SegmentationException(Exception):

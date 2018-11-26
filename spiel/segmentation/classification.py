@@ -1,5 +1,5 @@
 """
-mspl.segmentation.classification
+spiel.segmentation.classification
 
 Defines classes that can be used by segmenters
 """

@@ -2,14 +2,14 @@
 
 from unittest import TestCase
 import re
-from mspl.segmentation import ConstraintSegmenter
-from mspl.segmentation.constraints import (
+from spiel.segmentation import ConstraintSegmenter
+from spiel.segmentation.constraints import (
     Constraint,
     SegmentationException,
     generate_constraints,
     generate_options
 )
-from mspl.segmentation.classification import ClassifierAdaptor
+from spiel.segmentation.classification import ClassifierAdaptor
 
 
 class DummyClassifier(ClassifierAdaptor):

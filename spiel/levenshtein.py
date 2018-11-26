@@ -1,5 +1,5 @@
 """
-mspl.levenshtein
+spiel.levenshtein
 
 Implementation of Levenshtein distance and related functionality. This module
 is designed to accept any list of comparables instead of just strings, create
@@ -10,7 +10,7 @@ instead of the original target.
 from abc import ABCMeta, abstractmethod
 import re
 import numpy as np
-from mspl.util import flatten
+from spiel.util import flatten
 
 INSERT_SYMBOL = 'I'
 DELETE_SYMBOL = 'D'
