@@ -50,7 +50,7 @@ class Segmenter:
 
         for i, feature in enumerate(features):
             distribution = self.classifier.prob_classify(feature)
-            constraints.update(self.generate_constraints(distribution, i))
+            constraints.update(self.generate_constraints(distribution, i+1))
 
         return []
 
@@ -95,6 +95,21 @@ class Segmenter:
                 constraints[suf_bg_constraint] += weight
 
         return constraints
+
+    def generate_options(self, string, constraints):
+        options = [set() for _ in range(len(string) + 2)]
+
+        for constraint in constraints:
+            labels = constraint.label.split('-')
+            for i, label in enumerate(labels):
+                index = constraint.span[0] + i
+                options[index].add(label)
+
+        for option in options:
+            if not option:
+                option.add('_')
+
+        return options
 
 
 class Featurizer:

@@ -104,6 +104,47 @@ describe TestCase 'Segmenter':
 
             self.assertEqual(constraints, target)
 
+    describe 'generate_options':
+        it 'returns a list with two more elements than the string passed in':
+            constraints = {
+                Constraint((0, 3), '_-_-FOO'): 0.9,
+                Constraint((0, 1), '_'): 0.92,
+                Constraint((1, 2), '_'): 1.4,
+                Constraint((2, 3), 'FOO'): 0.9,
+                Constraint((0, 2), '_-_'): 0.9,
+                Constraint((1, 3), '_-FOO'): 0.9
+            }
+            options = self.segmenter.generate_options('foo', constraints)
+            self.assertEqual(len(options), 5)
+
+        it 'inserts an underscore if no constraint matches an index':
+            constraints = {
+                Constraint((1, 2), '_'): 1.4,
+                Constraint((2, 3), 'FOO'): 0.9,
+                Constraint((1, 3), '_-FOO'): 0.9
+            }
+            options = self.segmenter.generate_options('foo', constraints)
+            self.assertEqual(options[0], set('_'))
+
+        it 'returns a list of sets of options based on the constraints':
+            constraints = {
+                Constraint((0, 3), '_-_-FOO'): 0.9,
+                Constraint((0, 1), '_'): 0.92,
+                Constraint((1, 2), '_'): 1.4,
+                Constraint((2, 3), 'FOO'): 0.9,
+                Constraint((0, 2), '_-_'): 0.9,
+                Constraint((1, 3), '_-FOO'): 0.9,
+                Constraint((1, 3), '_-BAR'): 0.9
+            }
+            options = self.segmenter.generate_options('foo', constraints)
+            self.assertEqual(options, [
+                set('_'),
+                set('_'),
+                set(['FOO', 'BAR']),
+                set('_'),
+                set('_')
+            ])
+
 
 describe TestCase 'Featurizer':
     describe 'convert_pairs':
