@@ -11,7 +11,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn_crfsuite import CRF
 from sklearn_crfsuite.metrics import flat_f1_score
 
-from util import flatten
+from mspl.util import flatten
 
 
 DEFAULT_ALGORITHM = 'lbfgs'

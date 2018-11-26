@@ -193,7 +193,6 @@ class Operation(metaclass=ABCMeta):
                           replacements
         :type reference: list or str
         """
-        pass
 
     @abstractmethod
     def annotate(self, annotation, origin, reference):
@@ -208,7 +207,6 @@ class Operation(metaclass=ABCMeta):
                           toward
         :type reference: list or str
         """
-        pass
 
     def __eq__(self, other):
         return self.type == other.type \
