@@ -5,6 +5,9 @@ import re
 from mspl.segmentation import (
     Featurizer,
     Segmenter,
+    Constraint,
+    SegmentationException,
+    FeaturizationException,
     concat_annotations,
     label_annotations,
     pad
@@ -18,14 +21,51 @@ class DummyClassifier:
     def train(data):
         return DummyClassifier(data)
 
+    def prob_classify(self, features):
+        table = {
+            '____fo_': [
+                ('_-_-FOO', .9),
+                ('_-FOO-BAR', .02),
+                ('FOO-BAR-_', .03),
+                ('BAR-_-_', 0.5)
+            ],
+            '___fo__': [
+                ('_-_-FOO', .03),
+                ('_-FOO-BAR', .92),
+                ('FOO-BAR-_', .04),
+                ('BAR-_-_', 0.01)
+            ],
+            '__fo___': [
+                ('_-_-FOO', .03),
+                ('_-FOO-BAR', .015),
+                ('FOO-BAR-_', .95),
+                ('BAR-_-_', 0.005)
+            ],
+            '_fo____': [
+                ('_-_-FOO', .001),
+                ('_-FOO-BAR', .009),
+                ('FOO-BAR-_', .08),
+                ('BAR-_-_', 0.91)
+            ]
+        }
+        lookup = features['prefix']+features['focus']+features['suffix']
+        if lookup in table:
+            return table[lookup]
+        return  [
+            ('_-_-FOO', .23),
+            ('_-FOO-BAR', .24),
+            ('FOO-BAR-_', .26),
+            ('BAR-_-_', 0.27)
+        ]
 
-describe 'Segmenter':
+
+describe TestCase 'Segmenter':
     before_each:
         instances = [
-            ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_+_+FOO'),
-            ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_+FOO+BAR'),
-            ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO+BAR+_'),
-            ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+            ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_-_-FOO'),
+            ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_-FOO-BAR'),
+            ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
+            ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
         ]
         self.segmenter = Segmenter(DummyClassifier)
         self.segmenter.train(instances)
@@ -35,45 +75,71 @@ describe 'Segmenter':
             self.assertEqual(len(self.segmenter.classifier.instances),  4)
 
     describe 'segment':
+        it 'raises an error if the segmenter has not already been trained':
+            segmenter = Segmenter(DummyClassifier)
+            with self.assertRaises(SegmentationException):
+                segmenter.segment('foo')
+
         it 'returns an empty list if an empty string is provided':
             self.assertEqual(self.segmenter.segment(''), [])
 
+    describe 'generate_constraints':
+        it 'generates constraints for a feature set':
+            distribution = [
+                ('_-_-FOO', .9),
+                ('_-FOO-BAR', .02),
+                ('FOO-BAR-_', .03),
+                ('BAR-_-_', 0.5)
+            ]
+            constraints = self.segmenter.generate_constraints(distribution, 3)
+
+            target = {
+                Constraint((2, 5), '_-_-FOO'): 0.9,
+                Constraint((2, 3), '_'): 0.92,
+                Constraint((3, 4), '_'): 1.4,
+                Constraint((4, 5), 'FOO'): 0.9,
+                Constraint((2, 4), '_-_'): 0.9,
+                Constraint((3, 5), '_-FOO'): 0.9
+            }
+
+            self.assertEqual(constraints, target)
+
 
 describe TestCase 'Featurizer':
-    describe 'convert':
-        ignore 'returns three training instances when given a single character':
+    describe 'convert_pairs':
+        it 'returns three training instances when given a single character':
             featurizer = Featurizer()
             shape = 'f'
             labels = ['FOO']
-            instances = featurizer.convert(shape, labels)
+            instances = featurizer.convert_pairs(shape, labels)
             self.assertEqual(instances, [
-                ({'prefix': '___', 'focus': '_', 'suffix': 'f__'}, '_+_+FOO'),
-                ({'prefix': '___', 'focus': 'f', 'suffix': '___'}, '_+FOO+_'),
-                ({'prefix': '__f', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f__'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': '___'}, '_-FOO-_'),
+                ({'prefix': '__f', 'focus': '_', 'suffix': '___'}, 'FOO-_-_')
             ])
 
         it 'returns four training instances when given two characters':
             featurizer = Featurizer()
             shape = 'fo'
             labels = ['FOO', 'BAR']
-            instances = featurizer.convert(shape, labels)
+            instances = featurizer.convert_pairs(shape, labels)
             self.assertEqual(instances, [
-                ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_+_+FOO'),
-                ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_+FOO+BAR'),
-                ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO+BAR+_'),
-                ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+                ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_-FOO-BAR'),
+                ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
+                ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
             ])
 
         it 'handles shapes when they are lists':
             featurizer = Featurizer()
             shape = ['f', 'oo']
             labels = ['FOO', 'BAR']
-            instances = featurizer.convert(shape, labels)
+            instances = featurizer.convert_pairs(shape, labels)
             self.assertEqual(instances, [
-                ({'prefix': '___', 'focus': '_', 'suffix': 'foo_'}, '_+_+FOO'),
-                ({'prefix': '___', 'focus': 'f', 'suffix': 'oo__'}, '_+FOO+BAR'),
-                ({'prefix': '__f', 'focus': 'oo', 'suffix': '___'}, 'FOO+BAR+_'),
-                ({'prefix': '_foo', 'focus': '_', 'suffix': '___'}, 'BAR+_+_')
+                ({'prefix': '___', 'focus': '_', 'suffix': 'foo_'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': 'oo__'}, '_-FOO-BAR'),
+                ({'prefix': '__f', 'focus': 'oo', 'suffix': '___'}, 'FOO-BAR-_'),
+                ({'prefix': '_foo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
             ])
 
         it 'uses a tokenize function to separate shape tokens':
@@ -81,11 +147,11 @@ describe TestCase 'Featurizer':
             featurizer = Featurizer(tokenize=tokenize)
             shape = 'f&'
             labels = ['FOO']
-            instances = featurizer.convert(shape, labels)
+            instances = featurizer.convert_pairs(shape, labels)
             self.assertEqual(instances, [
-                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_+_+FOO'),
-                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_+FOO+_'),
-                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_-FOO-_'),
+                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO-_-_')
             ])
 
         it 'does not use the tokenize function on lists':
@@ -93,11 +159,42 @@ describe TestCase 'Featurizer':
             featurizer = Featurizer(tokenize=tokenize)
             shape = ['f&']
             labels = ['FOO']
-            instances = featurizer.convert(shape, labels)
+            instances = featurizer.convert_pairs(shape, labels)
             self.assertEqual(instances, [
-                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_+_+FOO'),
-                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_+FOO+_'),
-                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO+_+_')
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f&__'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f&', 'suffix': '___'}, '_-FOO-_'),
+                ({'prefix': '__f&', 'focus': '_', 'suffix': '___'}, 'FOO-_-_')
+            ])
+
+        it 'raises an error if the size of the shape and labels do not match':
+            featurizer = Featurizer()
+            shape = 'f&'
+            labels = ['FOO']
+            with self.assertRaises(FeaturizationException):
+                featurizer.convert_pairs(shape, labels)
+
+    describe 'convert_features':
+        it 'returns three training instances when given a single character':
+            featurizer = Featurizer()
+            shape = 'f'
+            labels = ['FOO']
+            instances = featurizer.convert_features(shape)
+            self.assertEqual(instances, [
+                {'prefix': '___', 'focus': '_', 'suffix': 'f__'},
+                {'prefix': '___', 'focus': 'f', 'suffix': '___'},
+                {'prefix': '__f', 'focus': '_', 'suffix': '___'}
+            ])
+
+        it 'returns four training instances when given two characters':
+            featurizer = Featurizer()
+            shape = 'fo'
+            labels = ['FOO', 'BAR']
+            instances = featurizer.convert_features(shape)
+            self.assertEqual(instances, [
+                {'prefix': '___', 'focus': '_', 'suffix': 'fo_'},
+                {'prefix': '___', 'focus': 'f', 'suffix': 'o__'},
+                {'prefix': '__f', 'focus': 'o', 'suffix': '___'},
+                {'prefix': '_fo', 'focus': '_', 'suffix': '___'}
             ])
 
     describe 'label':
@@ -174,6 +271,7 @@ describe TestCase 'Featurizer':
             labels = featurizer.label('fooba', annotations)
             self.assertEqual(labels, ['B', 'I', 'I', 'B', 'I'])
 
+
 describe TestCase 'concat_annotations':
     it 'returns an empty string if no annotations are provided':
         concat = concat_annotations([])
@@ -203,6 +301,7 @@ describe TestCase 'label_annotations':
         tokenize = lambda x: list(re.findall(r'.\.?', x))
         labels = label_annotations(annotations, 'I', tokenize)
         self.assertEqual(labels, ['A', 'I', 'B', 'I'])
+
 
 describe TestCase 'pad':
     it 'adds a character to either side of a string':
