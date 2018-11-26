@@ -370,4 +370,4 @@ class DeleteOperation(Operation):
         annotation[self.origin_pos] = f"+{DELETE_SYMBOL}({origin_str}){tags}"
 
     def __repr__(self):
-        return f"Delete {self.origin_pos}"
+        return f"Delete at position {self.origin_pos}"

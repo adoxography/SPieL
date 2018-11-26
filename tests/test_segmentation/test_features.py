@@ -176,9 +176,9 @@ describe TestCase 'Featurizer':
 
         it 'can reduce labels down to B/I/O':
             featurizer = Featurizer(mode='basic')
-            annotations = [('foo', 'bar'), ('baz', 'boo')]
-            labels = featurizer.label('fooba', annotations)
-            self.assertEqual(labels, ['B', 'I', 'I', 'B', 'I'])
+            annotations = [('_', '_'), ('foo', 'bar'), ('baz', 'boo')]
+            labels = featurizer.label('_fooba', annotations)
+            self.assertEqual(labels, ['O', 'B', 'I', 'I', 'B', 'I'])
 
 
 describe TestCase 'concat_annotations':

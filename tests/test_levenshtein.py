@@ -128,22 +128,26 @@ describe TestCase 'annotate':
 describe TestCase 'ReplaceOperation':
     describe 'apply':
         it 'replaces a character in an origin list with a character in a reference list':
-            operation = levenshtein.ReplaceOperation(1, 3)
+            operation = ReplaceOperation(1, 3)
             origin = ['f', 'o', 'o']
             operation.apply(origin, ['h', 'e', 'l', 'l', 'o'])
             self.assertEqual(origin, ['f', 'l', 'o'])
 
         it 'handles nested origin lists':
-            operation = levenshtein.ReplaceOperation(1, 3)
+            operation = ReplaceOperation(1, 3)
             origin = ['f', ['o', 'b'], 'a']
             operation.apply(origin, 'hello')
             self.assertEqual(origin, ['f', ['l', 'b'], 'a'])
 
         it 'annotates annotations':
-            operation = levenshtein.ReplaceOperation(0, 0)
+            operation = ReplaceOperation(0, 0)
             annotation = ['f', 'o', 'o']
             operation.annotate(annotation, 'foo', 'bar')
             self.assertEqual(annotation, ['f+R(f,b)', 'o', 'o'])
+
+    it 'can be represented':
+        operation = ReplaceOperation(1, 5)
+        self.assertEqual(str(operation), 'Replace 1 with 5')
 
 
 describe TestCase 'InsertOperation':
@@ -165,6 +169,10 @@ describe TestCase 'InsertOperation':
             annotation = ['f', 'o', 'o']
             operation.annotate(annotation, 'foo', 'bar')
             self.assertEqual(annotation, ['f', 'o+I(r)', 'o'])
+
+    it 'can be represented':
+        operation = InsertOperation(1, 5)
+        self.assertEqual(str(operation), 'Insert 5 at position 1')
 
 
 describe TestCase 'DeleteOperation':
@@ -192,3 +200,7 @@ describe TestCase 'DeleteOperation':
             annotation = ['b', 'a+I(f)', 'r']
             operation.annotate(annotation, 'bar', 'foo')
             self.assertEqual(annotation, ['b', '+D(a)+I(f)', 'r'])
+
+    it 'can be represented':
+        operation = DeleteOperation(3)
+        self.assertEqual(str(operation), 'Delete at position 3')
