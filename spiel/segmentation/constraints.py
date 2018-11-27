@@ -83,8 +83,8 @@ class ConstraintSegmenter:
 
         :param string: The string to segment
         :type string: str
-        :return: A list of morphemes
-        :rtype: list of str
+        :return: A list of morpheme/label pairs
+        :rtype: list of (str, str)
         """
         if self.classifier is None:
             raise SegmentationException("The segmenter has not been trained")
@@ -101,7 +101,25 @@ class ConstraintSegmenter:
         solutions = all_permutations(options)
 
         optimal_solution = find_optimal_solution(solutions, constraints)
-        return optimal_solution[3:-3]
+        return self.__merge_labels(string, optimal_solution[3:-3])
+
+    def __merge_labels(self, sequence, labels):
+        segments = []
+        curr_segment = ''
+        curr_label = None
+
+        for token, label in zip(sequence, labels):
+            if not label == self.featurizer.inside_label:
+                if curr_label is not None:
+                    segments.append((curr_segment, curr_label))
+                    curr_segment = ''
+                curr_label = label
+            curr_segment += token
+
+        if curr_label:
+            segments.append((curr_segment, curr_label))
+
+        return segments
 
 
 def generate_constraints(distribution, index):

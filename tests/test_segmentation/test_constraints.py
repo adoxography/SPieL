@@ -118,7 +118,7 @@ describe TestCase 'ConstraintSegmenter':
 
         it 'finds the most likely sequence of labels':
             labels = self.segmenter.segment('fo')
-            self.assertEqual(labels, ['FOO', 'BAR'])
+            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
 
         it 'uses a custom featurizer':
             shapes = ['f&o']
@@ -127,7 +127,7 @@ describe TestCase 'ConstraintSegmenter':
             segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
             segmenter.train(shapes, annotations)
             labels = segmenter.segment('f&o')
-            self.assertEqual(labels, ['FOO', 'BAR'])
+            self.assertEqual(labels, [('f&', 'FOO'), ('o', 'BAR')])
 
 
 describe TestCase 'generate_constraints':
