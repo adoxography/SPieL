@@ -1,7 +1,7 @@
 """
-spiel.sequence_labelling
+spiel.sequence_labelling.crf
 
-Module for labelling morphemes
+CRF classifier for labelling morpheme sequences
 """
 import pickle
 
