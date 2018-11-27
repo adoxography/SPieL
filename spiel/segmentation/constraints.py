@@ -59,13 +59,22 @@ class ConstraintSegmenter:
         self.featurizer = Featurizer()
         self.classifier = None
 
-    def train(self, instances):
+    def train(self, shapes, annotations):
         """
         Trains the underlying classifier
 
-        :param instances: The instances to use to train the classifier
-        :type instances: list of (dict, str)
+        :param shapes: The observable strings to train on
+        :type shapes: list of str or list of list of str
+        :param annotations: Annotations for each shape
+        :type annotations: list of list of str
         """
+        if not len(shapes) == len(annotations):
+            raise SegmentationException(f"There are {len(shapes)} shapes but \
+{len(annotations)} annotations.")
+        instances = []
+        for shape, annotation in zip(shapes, annotations):
+            labels = self.featurizer.label(shape, annotation)
+            instances += self.featurizer.convert_pairs(shape, labels)
         self.classifier = self.classifier_type.train(instances)
 
     def segment(self, string):

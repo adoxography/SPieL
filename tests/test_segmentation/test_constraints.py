@@ -60,18 +60,27 @@ class DummyClassifier(ClassifierAdaptor):
 
 describe TestCase 'ConstraintSegmenter':
     before_each:
-        instances = [
-            ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_-_-FOO'),
-            ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_-FOO-BAR'),
-            ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
-            ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
-        ]
+        train_shapes = ['fo']
+        train_annotations = [[('f', 'FOO'), ('o', 'BAR')]]
         self.segmenter = ConstraintSegmenter(DummyClassifier)
-        self.segmenter.train(instances)
+        self.segmenter.train(train_shapes, train_annotations)
 
     describe 'train':
-        it 'passes instances into an internal classifier':
-            self.assertEqual(len(self.segmenter.classifier.instances),  4)
+        it 'converts items into training instances and passes them into an internal classifier':
+            instances = [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'fo_'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f', 'suffix': 'o__'}, '_-FOO-BAR'),
+                ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
+                ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
+            ]
+            self.assertEqual(self.segmenter.classifier.instances,  instances)
+
+        it 'raises an error if the number of shapes do not match the number of annotations':
+            train_shapes = ['fo', 'bar']
+            train_annotations = [[('f', 'FOO'), ('o', 'BAR')]]
+            segmenter = ConstraintSegmenter(DummyClassifier)
+            with self.assertRaises(SegmentationException):
+                segmenter.train(train_shapes, train_annotations)
 
     describe 'segment':
         it 'raises an error if the segmenter has not already been trained':
