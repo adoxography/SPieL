@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 import re
-from spiel.segmentation import ConstraintSegmenter
+from spiel.segmentation import ConstraintSegmenter, Featurizer
 from spiel.segmentation.constraints import (
     Constraint,
     SegmentationException,
@@ -47,6 +47,11 @@ class DummyClassifier(ClassifierAdaptor):
                 ('BAR-_-_', 0.91)
             ]
         }
+        table['____f&o_'] = table['____fo_']
+        table['___f&o__'] = table['___fo__']
+        table['__f&o___'] = table['__fo___']
+        table['_f&o____'] = table['_fo____']
+
         lookup = features['prefix']+features['focus']+features['suffix']
         if lookup in table:
             return table[lookup]
@@ -65,6 +70,11 @@ describe TestCase 'ConstraintSegmenter':
         self.segmenter = ConstraintSegmenter(DummyClassifier)
         self.segmenter.train(train_shapes, train_annotations)
 
+    it 'accepts a custom featurizer':
+        featurizer = Featurizer()
+        segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+        self.assertIs(segmenter.featurizer, featurizer)
+
     describe 'train':
         it 'converts items into training instances and passes them into an internal classifier':
             instances = [
@@ -73,7 +83,7 @@ describe TestCase 'ConstraintSegmenter':
                 ({'prefix': '__f', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
                 ({'prefix': '_fo', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
             ]
-            self.assertEqual(self.segmenter.classifier.instances,  instances)
+            self.assertEqual(self.segmenter.classifier.instances, instances)
 
         it 'raises an error if the number of shapes do not match the number of annotations':
             train_shapes = ['fo', 'bar']
@@ -81,6 +91,21 @@ describe TestCase 'ConstraintSegmenter':
             segmenter = ConstraintSegmenter(DummyClassifier)
             with self.assertRaises(SegmentationException):
                 segmenter.train(train_shapes, train_annotations)
+
+        it 'uses a custom featurizer':
+            shapes = ['f&o']
+            annotations = [[('f&', 'FOO'), ('o', 'BAR')]]
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(shapes, annotations)
+            instances = [
+                ({'prefix': '___', 'focus': '_', 'suffix': 'f&o_'}, '_-_-FOO'),
+                ({'prefix': '___', 'focus': 'f&', 'suffix': 'o__'}, '_-FOO-BAR'),
+                ({'prefix': '__f&', 'focus': 'o', 'suffix': '___'}, 'FOO-BAR-_'),
+                ({'prefix': '_f&o', 'focus': '_', 'suffix': '___'}, 'BAR-_-_')
+            ]
+            self.assertEqual(segmenter.classifier.instances, instances)
+
 
     describe 'segment':
         it 'raises an error if the segmenter has not already been trained':
@@ -93,6 +118,15 @@ describe TestCase 'ConstraintSegmenter':
 
         it 'finds the most likely sequence of labels':
             labels = self.segmenter.segment('fo')
+            self.assertEqual(labels, ['FOO', 'BAR'])
+
+        it 'uses a custom featurizer':
+            shapes = ['f&o']
+            annotations = [[('f&', 'FOO'), ('o', 'BAR')]]
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(shapes, annotations)
+            labels = segmenter.segment('f&o')
             self.assertEqual(labels, ['FOO', 'BAR'])
 
 

@@ -54,9 +54,9 @@ class ConstraintSegmenter:
     """
     Segments strings based on constraint satisfaction
     """
-    def __init__(self, Classifier):
+    def __init__(self, Classifier, featurizer=None):
         self.classifier_type = Classifier
-        self.featurizer = Featurizer()
+        self.featurizer = featurizer or Featurizer()
         self.classifier = None
 
     def train(self, shapes, annotations):
@@ -90,6 +90,7 @@ class ConstraintSegmenter:
             raise SegmentationException("The segmenter has not been trained")
 
         constraints = {}
+        string = self.featurizer.tokenize(string)
         features = self.featurizer.convert_features(string)
 
         for i, feature in enumerate(features):
