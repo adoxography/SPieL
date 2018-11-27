@@ -1,0 +1,3 @@
+-r common.txt
+nose==1.3.7
+noseOfYeti==1.8
