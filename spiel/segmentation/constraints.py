@@ -6,6 +6,7 @@ Module for segmenting strings based on constraints
 import re
 from collections import defaultdict
 from spiel.segmentation.features import Featurizer
+from spiel.segmentation.classification import SKLearnNaiveBayesClassifier
 from spiel.util import all_permutations
 
 
@@ -54,8 +55,8 @@ class ConstraintSegmenter:
     """
     Segments strings based on constraint satisfaction
     """
-    def __init__(self, Classifier, featurizer=None):
-        self.classifier_type = Classifier
+    def __init__(self, Classifier=None, featurizer=None):
+        self.classifier_type = Classifier or SKLearnNaiveBayesClassifier
         self.featurizer = featurizer or Featurizer()
         self.classifier = None
 
