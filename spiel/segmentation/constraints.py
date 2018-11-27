@@ -77,31 +77,33 @@ class ConstraintSegmenter:
             instances += self.featurizer.convert_pairs(shape, labels)
         self.classifier = self.classifier_type.train(instances)
 
-    def segment(self, string):
+    def segment(self, sequence):
         """
-        Segments a string into morphemes
+        Segments a sequence into morphemes
 
-        :param string: The string to segment
-        :type string: str
+        :param sequence: The sequence to segment
+        :type sequence: list or str
         :return: A list of morpheme/label pairs
         :rtype: list of (str, str)
         """
         if self.classifier is None:
             raise SegmentationException("The segmenter has not been trained")
 
+        if isinstance(sequence, str):
+            sequence = self.featurizer.tokenize(sequence)
+
         constraints = {}
-        string = self.featurizer.tokenize(string)
-        features = self.featurizer.convert_features(string)
+        features = self.featurizer.convert_features(sequence)
 
         for i, feature in enumerate(features):
             distribution = self.classifier.prob_classify(feature)
             constraints.update(generate_constraints(distribution, i+2))
 
-        options = generate_options(string, constraints)
+        options = generate_options(sequence, constraints)
         solutions = all_permutations(options)
 
         optimal_solution = find_optimal_solution(solutions, constraints)
-        return self.__merge_labels(string, optimal_solution[3:-3])
+        return self.__merge_labels(sequence, optimal_solution[3:-3])
 
     def __merge_labels(self, sequence, labels):
         segments = []

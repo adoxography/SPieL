@@ -65,10 +65,10 @@ class DummyClassifier(ClassifierAdaptor):
 
 describe TestCase 'ConstraintSegmenter':
     before_each:
-        train_shapes = ['fo']
-        train_annotations = [[('f', 'FOO'), ('o', 'BAR')]]
+        self.train_shapes = ['fo']
+        self.train_annotations = [[('f', 'FOO'), ('o', 'BAR')]]
         self.segmenter = ConstraintSegmenter(DummyClassifier)
-        self.segmenter.train(train_shapes, train_annotations)
+        self.segmenter.train(self.train_shapes, self.train_annotations)
 
     it 'accepts a custom featurizer':
         featurizer = Featurizer()
@@ -118,6 +118,13 @@ describe TestCase 'ConstraintSegmenter':
 
         it 'finds the most likely sequence of labels':
             labels = self.segmenter.segment('fo')
+            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
+
+        it 'works on lists of str':
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(self.train_shapes, self.train_annotations)
+            labels = segmenter.segment(['f', 'o'])
             self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
 
         it 'uses a custom featurizer':
