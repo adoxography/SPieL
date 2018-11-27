@@ -5,9 +5,9 @@ from pathlib import Path
 
 from sklearn_crfsuite import CRF
 
-from spiel.sequence_labelling import SequenceLabeller
+from spiel.sequence_labelling import SequenceClassifier
 
-describe TestCase 'SequenceLabeller':
+describe TestCase 'SequenceClassifier':
     before_each:
         self.features = [
             [{'x': 'a'}, {'x': 'b'}],
@@ -24,7 +24,7 @@ describe TestCase 'SequenceLabeller':
 
     describe 'build':
         it 'generates a trained crf classifier':
-            labeller = SequenceLabeller.build(self.features, self.labels)
+            labeller = SequenceClassifier.build(self.features, self.labels)
             self.assertIsInstance(labeller.model, CRF)
 
         it 'passes additional options through to the crf':
@@ -32,7 +32,7 @@ describe TestCase 'SequenceLabeller':
                 'c1': 0.05,
                 'max_iterations': 4
             }
-            labeller = SequenceLabeller.build(self.features, self.labels, **options)
+            labeller = SequenceClassifier.build(self.features, self.labels, **options)
             crf = labeller.model
             self.assertEqual(crf.c1, 0.05)
             self.assertEqual(crf.max_iterations, 4)
@@ -46,7 +46,7 @@ describe TestCase 'SequenceLabeller':
                 ['FOO', 'FOO'],
                 ['FOO', 'FOO']
             ]
-            labeller = SequenceLabeller.grid_search(self.features, labels)
+            labeller = SequenceClassifier.grid_search(self.features, labels)
             self.assertIsInstance(labeller.model, CRF)
 
     describe 'save':
@@ -57,26 +57,26 @@ describe TestCase 'SequenceLabeller':
             delete_file(self.path)
 
         it 'saves itself to disk':
-            labeller = SequenceLabeller.build(self.features, self.labels)
+            labeller = SequenceClassifier.build(self.features, self.labels)
             labeller.save(self.path)
             self.assertTrue(self.path.exists())
 
     describe 'load':
         before_each:
             self.path = Path('TEST_SEQUENCE_LABEL_MODEL.pickle')
-            labeller = SequenceLabeller.build(self.features, self.labels, c1=0.001)
+            labeller = SequenceClassifier.build(self.features, self.labels, c1=0.001)
             labeller.save(self.path)
 
         after_each:
             delete_file(self.path)
 
         it 'loads a file from disk':
-            loaded = SequenceLabeller.load(self.path)
+            loaded = SequenceClassifier.load(self.path)
             self.assertEqual(loaded.model.c1, 0.001)
 
     describe 'predict':
         it 'predicts labels for features':
-            labeller = SequenceLabeller.build(self.features, self.labels)
+            labeller = SequenceClassifier.build(self.features, self.labels)
             prediction = labeller.predict([{'x': 'a'}, {'x': 'b'}])
             self.assertEqual(prediction, ['FOO', 'BAR'])
 
@@ -86,7 +86,7 @@ describe TestCase 'SequenceLabeller':
                 [{'x': 'a'}, {'x': 'b'}],
                 [{'x': 'b'}, {'x': 'c'}]
             ]
-            labeller = SequenceLabeller.build(self.features, self.labels)
+            labeller = SequenceClassifier.build(self.features, self.labels)
             prediction = labeller.predict_many(features)
             self.assertEqual(prediction, [['FOO', 'BAR'], ['BAR', 'BAZ']])
 
@@ -97,7 +97,7 @@ describe TestCase 'SequenceLabeller':
                 [{'x': 'b'}, {'x': 'c'}]
             ]
             labels = [['FOO', 'BAR'], ['BAZ', 'BAZ']]
-            labeller = SequenceLabeller.build(self.features, self.labels)
+            labeller = SequenceClassifier.build(self.features, self.labels)
             f1 = labeller.evaluate(features, labels)
             self.assertEqual(f1, 0.75)
 

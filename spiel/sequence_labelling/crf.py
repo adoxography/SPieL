@@ -1,5 +1,5 @@
 """
-spiel.sequence_labelling.crf
+spiel.sequence_labelling.classification
 
 CRF classifier for labelling morpheme sequences
 """
@@ -21,7 +21,7 @@ DEFAULT_MAX_ITERATIONS = 100
 DEFAULT_ALL_POSSIBLE_TRANSITIONS = True
 
 
-class SequenceLabeller:
+class SequenceClassifier:
     """
     Labels morphemes using an underlying CRF classifier
     """
@@ -29,7 +29,7 @@ class SequenceLabeller:
         """
         Initializes the classifier
 
-        SequenceLabeller.build() or SequenceLabeller.grid_search() should
+        SequenceClassifier.build() or SequenceClassifier.grid_search() should
         normally be used instead.
 
         :param model: The underlying CRF model
@@ -51,7 +51,7 @@ class SequenceLabeller:
                        underlying CRF
         :return: A trained sequence classifier based on the provided training
                  data
-        :rtype: SequenceLabeller
+        :rtype: SequenceClassifier
         """
         params = {
             'algorithm': DEFAULT_ALGORITHM,
@@ -66,7 +66,7 @@ class SequenceLabeller:
 
         model = CRF(**params)
         model.fit(sequences, labels)
-        return SequenceLabeller(model)
+        return SequenceClassifier(model)
 
     @staticmethod
     def grid_search(sequences, labels):
@@ -83,10 +83,10 @@ class SequenceLabeller:
                        underlying CRF
         :return: A trained sequence classifier based on the provided training
                  data
-        :rtype: SequenceLabeller
+        :rtype: SequenceClassifier
         """
         search = _grid_search(sequences, labels)
-        return SequenceLabeller(search.best_estimator_)
+        return SequenceClassifier(search.best_estimator_)
 
     def save(self, path):
         """
@@ -102,7 +102,7 @@ class SequenceLabeller:
         """
         with open(path, 'rb') as model_file:
             model = pickle.load(model_file)
-        return SequenceLabeller(model)
+        return SequenceClassifier(model)
 
     def predict(self, sequence):
         """
