@@ -121,19 +121,22 @@ but {len(labels)} labels provided")
         labels = levenshtein.annotate(annotation_string, shape, ops, labels)
 
         for i, label in enumerate(labels):
+            # Perform any insertion directives
             matches = re.findall(rf'\+{INSERT_SYMBOL}(.*?)', label)
             for _ in matches:
                 labels.insert(i+1, self.inside_label)
 
-        if self.mode in ['basic', 'normal']:
-            # Get rid of any operator directives
-            labels = [re.match(r'^[^+]*', label)[0] for label in labels]
+        return [self.__format_label(label) for label in labels]
+
+    def __format_label(self, label):
+        if self.mode == 'basic' or self.mode == 'normal':
+            # Get rid of any directives
+            label = re.match(r'^[^+]*', label)[0]
 
         if self.mode == 'basic':
-            # Convert all labels to B/I/O scheme
-            labels = [self.__simplify_label(label) for label in labels]
+            label = self.__simplify_label(label)
 
-        return labels
+        return label
 
     def __simplify_label(self, label):
         if label == self.pad_token:
