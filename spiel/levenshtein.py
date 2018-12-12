@@ -213,6 +213,20 @@ class Operation(metaclass=ABCMeta):
             and self.origin_pos == other.origin_pos \
             and self.target_pos == other.target_pos
 
+    def next_original_element(self, origin):
+        """
+        Fast forwards past any insertions that have been added by previous
+        operations
+
+        :param origin: The original iterable
+        :type origin: list or str
+        """
+        index = self.origin_pos
+        while isinstance(origin[index], list):
+            origin = origin[index]
+            index = 0
+        return origin, index
+
 
 class ReplaceOperation(Operation):
     """
@@ -231,7 +245,7 @@ class ReplaceOperation(Operation):
         """
         super().__init__('REPLACE', origin_pos, target_pos)
 
-    def apply(self, origin, reference):
+    def apply(self, origin, reference=None):
         """
         Replaces the character at *origin_pos* in *origin* with the character
         at *target_pos* from *reference*
@@ -259,9 +273,10 @@ class ReplaceOperation(Operation):
                           toward
         :type reference: list or str
         """
+        index = self.origin_pos
         origin_str = origin[self.origin_pos]
         target_str = reference[self.target_pos]
-        annotation[self.origin_pos] += f"+{REPLACE_SYMBOL}({origin_str},{target_str})"
+        annotation[index] += f"+{REPLACE_SYMBOL}({origin_str},{target_str})"
 
     def __repr__(self):
         return f"Replace {self.origin_pos} with {self.target_pos}"
@@ -284,7 +299,7 @@ class InsertOperation(Operation):
         """
         super().__init__('INSERT', origin_pos, target_pos)
 
-    def apply(self, origin, reference):
+    def apply(self, origin, reference=None):
         """
         Inserts the character at *target_pos* in *reference* after *origin_pos*
         in *origin*
@@ -294,12 +309,8 @@ class InsertOperation(Operation):
         :param reference: The list to reference in the operation
         :type reference: str or list
         """
-        index = self.origin_pos
-        while isinstance(origin[index], list):
-            origin = origin[index]
-            index = 0
-        origin[index] = [origin[index],
-                         reference[self.target_pos]]
+        origin, index = self.next_original_element(origin)
+        origin[index] = [origin[index], reference[self.target_pos]]
 
     def annotate(self, annotation, origin, reference):
         """
@@ -343,10 +354,7 @@ class DeleteOperation(Operation):
         :param reference: Dummy parameter to conform to the Operation interface
         :type reference: any
         """
-        index = self.origin_pos
-        while isinstance(origin[index], list):
-            origin = origin[index]
-            index = 0
+        origin, index = self.next_original_element(origin)
         origin[index] = None
 
     def annotate(self, annotation, origin, reference):
@@ -363,10 +371,7 @@ class DeleteOperation(Operation):
         """
         origin_str = origin[self.origin_pos]
         match = re.search(r'\+.*$', annotation[self.origin_pos])
-        if match:
-            tags = match[0]
-        else:
-            tags = ''
+        tags = match[0] if match else ''
         annotation[self.origin_pos] = f"+{DELETE_SYMBOL}({origin_str}){tags}"
 
     def __repr__(self):
