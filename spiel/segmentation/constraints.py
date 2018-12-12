@@ -18,7 +18,7 @@ class Constraint:
     """
     Represents a constraint on a sequence
     """
-    def __init__(self, span, label):
+    def __init__(self, span, label, position=None):
         """
         Initializes the constraint
 
@@ -26,9 +26,11 @@ class Constraint:
         :type span: (int, int)
         :param label: The label of this constraint
         :type label: str
+        :param position: Where in the trigram sequence this constraint falls
         """
         self.span = span
         self.label = label
+        self.position = position
 
     def is_satisfied(self, sequence):
         """
@@ -40,6 +42,25 @@ class Constraint:
         """
         segment = '-'.join(sequence[self.span[0]:self.span[1]])
         return self.label == segment
+
+    @property
+    def pattern(self):
+        """
+        Generates an escaped pattern for searching for this constraint, based
+        on its position
+
+        :rtype: str
+        """
+        if self.position == 'prefix':
+            base = '^%s-'
+        elif self.position == 'focus':
+            base = '-%s-'
+        elif self.position == 'suffix':
+            base = '-%s$'
+        else:
+            base = '%s'
+
+        return base % re.escape(self.label)
 
     def __repr__(self):
         return f"{self.span}->{self.label}"
@@ -137,35 +158,38 @@ def generate_constraints(distribution, index):
     :return: The constraints that were extracted from the distribution
     :rtype: dict of Constraint => float
     """
-    constraints = defaultdict(float)
+    weights = defaultdict(float)
 
-    tg_label, tg_weight = max(distribution, key=lambda x: x[1])
-    tg_constraint = Constraint((index-1, index+2), tg_label)
-    constraints[tg_constraint] = tg_weight
+    tg_label, _ = max(distribution, key=lambda x: x[1])
 
+    constraints = __initialize_constraints(tg_label, index)
+
+    for label, weight in distribution:
+        for constraint in constraints:
+            if re.search(constraint.pattern, label):
+                weights[constraint] += weight
+
+    return weights
+
+
+def __initialize_constraints(tg_label, index):
     pre_label, foc_label, suf_label = tg_label.split('-')
     pre_bg_label = pre_label + '-' + foc_label
     suf_bg_label = foc_label + '-' + suf_label
 
-    pre_ug_constraint = Constraint((index-1, index), pre_label)
-    foc_ug_constraint = Constraint((index, index+1), foc_label)
-    suf_ug_constraint = Constraint((index+1, index+2), suf_label)
-    pre_bg_constraint = Constraint((index-1, index+1), pre_bg_label)
-    suf_bg_constraint = Constraint((index, index+2), suf_bg_label)
+    pre_ug_constraint = Constraint((index-1, index), pre_label, 'prefix')
+    foc_ug_constraint = Constraint((index, index+1), foc_label, 'focus')
+    suf_ug_constraint = Constraint((index+1, index+2), suf_label, 'suffix')
+    pre_bg_constraint = Constraint((index-1, index+1), pre_bg_label, 'prefix')
+    suf_bg_constraint = Constraint((index, index+2), suf_bg_label, 'suffix')
+    tg_constraint = Constraint((index-1, index+2), tg_label)
 
-    for label, weight in distribution:
-        if re.search('^%s-' % re.escape(pre_label), label):
-            constraints[pre_ug_constraint] += weight
-        if re.search('-%s-' % re.escape(foc_label), label):
-            constraints[foc_ug_constraint] += weight
-        if re.search('-%s$' % re.escape(suf_label), label):
-            constraints[suf_ug_constraint] += weight
-        if re.search('^%s-' % re.escape(pre_bg_label), label):
-            constraints[pre_bg_constraint] += weight
-        if re.search('-%s$' % re.escape(suf_bg_label), label):
-            constraints[suf_bg_constraint] += weight
-
-    return constraints
+    return [pre_ug_constraint,
+            foc_ug_constraint,
+            suf_ug_constraint,
+            pre_bg_constraint,
+            suf_bg_constraint,
+            tg_constraint]
 
 
 def generate_options(sequence, constraints):
