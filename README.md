@@ -1,6 +1,6 @@
 # SPieL
 
-[![Build Status](https://travis-ci.com/adoxography/SPieL.svg?token=2bpSyoUcVP2tcDLrHq32&branch=master)](https://travis-ci.com/adoxography/SPieL)
+[![Build Status](https://scrutinizer-ci.com/g/adoxography/SPieL/badges/build.png?b=master)](https://scrutinizer-ci.com/g/adoxography/SPieL/build-status/master)
 [![Code Coverage](https://scrutinizer-ci.com/g/adoxography/SPieL/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/adoxography/SPieL/?branch=master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/adoxography/SPieL/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/adoxography/SPieL/?branch=master)
 
