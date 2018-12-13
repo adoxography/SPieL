@@ -1,0 +1,7 @@
+foo
+f o o
+B A R
+
+ba
+b a
+A B
