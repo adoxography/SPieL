@@ -1,3 +1,11 @@
+"""
+spiel.command_line
+
+Command line interface into SPieL
+
+Usage:
+spiel [data_file]
+"""
 import sys
 
 from spiel.data import load as load_instances
