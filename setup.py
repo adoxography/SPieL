@@ -8,6 +8,9 @@ setup(name='spiel',
       author_email='gstill@uw.edu',
       license='MIT',
       packages=['spiel'],
+      entry_points={
+          'console_scripts': ['spiel=spiel.command_line:main']
+      },
       setup_requires=[
           'nose==1.3.7',
           'noseOfYeti==1.8'

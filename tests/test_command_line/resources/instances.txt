@@ -1,0 +1,15 @@
+foo
+f o o
+A B B
+
+ba
+ba
+C
+
+bar
+ba r
+C  D
+
+baz
+ba z
+C  E
