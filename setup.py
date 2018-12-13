@@ -13,7 +13,8 @@ setup(name='spiel',
       },
       setup_requires=[
           'nose==1.3.7',
-          'noseOfYeti==1.8'
+          'noseOfYeti==1.8',
+          'nose-pathmunge'
       ],
       install_requires=[
           'numpy==1.15.4',
@@ -22,7 +23,6 @@ setup(name='spiel',
       ],
       test_suite='nose.collector',
       tests_require=[
-          'coverage==4.5.2',
-          'nose-pathmunge'
+          'coverage==4.5.2'
       ],
       zip_safe=False)
