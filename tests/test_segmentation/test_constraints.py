@@ -107,6 +107,36 @@ describe TestCase 'ConstraintSegmenter':
             self.assertEqual(segmenter.classifier.instances, instances)
 
 
+    describe 'annotate':
+        it 'raises an error if the segmenter has not already been trained':
+            segmenter = ConstraintSegmenter(DummyClassifier)
+            with self.assertRaises(SegmentationException):
+                segmenter.annotate('foo')
+
+        it 'returns an empty list if an empty string is provided':
+            self.assertEqual(self.segmenter.annotate(''), [])
+
+        it 'finds the most likely sequence of labels':
+            labels = self.segmenter.annotate('fo')
+            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
+
+        it 'works on lists of str':
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(self.train_shapes, self.train_annotations)
+            labels = segmenter.annotate(['f', 'o'])
+            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
+
+        it 'uses a custom featurizer':
+            shapes = ['f&o']
+            annotations = [[('f&', 'FOO'), ('o', 'BAR')]]
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(shapes, annotations)
+            labels = segmenter.annotate('f&o')
+            self.assertEqual(labels, [('f&', 'FOO'), ('o', 'BAR')])
+
+
     describe 'segment':
         it 'raises an error if the segmenter has not already been trained':
             segmenter = ConstraintSegmenter(DummyClassifier)
@@ -116,16 +146,16 @@ describe TestCase 'ConstraintSegmenter':
         it 'returns an empty list if an empty string is provided':
             self.assertEqual(self.segmenter.segment(''), [])
 
-        it 'finds the most likely sequence of labels':
-            labels = self.segmenter.segment('fo')
-            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
+        it 'finds the most likely segmentation':
+            segments = self.segmenter.segment('fo')
+            self.assertEqual(segments, ['f', 'o'])
 
         it 'works on lists of str':
             featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
             segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
             segmenter.train(self.train_shapes, self.train_annotations)
-            labels = segmenter.segment(['f', 'o'])
-            self.assertEqual(labels, [('f', 'FOO'), ('o', 'BAR')])
+            segments = segmenter.segment(['f', 'o'])
+            self.assertEqual(segments, ['f', 'o'])
 
         it 'uses a custom featurizer':
             shapes = ['f&o']
@@ -133,8 +163,38 @@ describe TestCase 'ConstraintSegmenter':
             featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
             segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
             segmenter.train(shapes, annotations)
-            labels = segmenter.segment('f&o')
-            self.assertEqual(labels, [('f&', 'FOO'), ('o', 'BAR')])
+            segments = segmenter.segment('f&o')
+            self.assertEqual(segments, ['f&', 'o'])
+
+
+    describe 'label':
+        it 'raises an error if the segmenter has not already been trained':
+            segmenter = ConstraintSegmenter(DummyClassifier)
+            with self.assertRaises(SegmentationException):
+                segmenter.label('foo')
+
+        it 'returns an empty list if an empty string is provided':
+            self.assertEqual(self.segmenter.label(''), [])
+
+        it 'finds the most likely sequence of labels':
+            labels = self.segmenter.label('fo')
+            self.assertEqual(labels, ['FOO', 'BAR'])
+
+        it 'works on lists of str':
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(self.train_shapes, self.train_annotations)
+            labels = segmenter.label(['f', 'o'])
+            self.assertEqual(labels, ['FOO', 'BAR'])
+
+        it 'uses a custom featurizer':
+            shapes = ['f&o']
+            annotations = [[('f&', 'FOO'), ('o', 'BAR')]]
+            featurizer = Featurizer(tokenize=lambda x: re.findall('.&?', x))
+            segmenter = ConstraintSegmenter(DummyClassifier, featurizer=featurizer)
+            segmenter.train(shapes, annotations)
+            labels = segmenter.label('f&o')
+            self.assertEqual(labels, ['FOO', 'BAR'])
 
 
 describe TestCase 'generate_constraints':

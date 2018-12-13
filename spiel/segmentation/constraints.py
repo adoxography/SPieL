@@ -99,9 +99,9 @@ class ConstraintSegmenter:
             instances += self.featurizer.convert_pairs(shape, labels)
         self.classifier = self.classifier_type.train(instances)
 
-    def segment(self, sequence):
+    def annotate(self, sequence):
         """
-        Segments a sequence into morphemes
+        Generates an annotated version of a sequence
 
         :param sequence: The sequence to segment
         :type sequence: list or str
@@ -126,6 +126,28 @@ class ConstraintSegmenter:
 
         optimal_solution = find_optimal_solution(solutions, constraints)
         return self.__merge_labels(sequence, optimal_solution[3:-3])
+
+    def segment(self, sequence):
+        """
+        Segments a sequence into morphemes
+
+        :param sequence: The sequence to segment
+        :type sequence: list or str
+        :return: A list of morpheme/label pairs
+        :rtype: list of (str, str)
+        """
+        return [segment for segment, _ in self.annotate(sequence)]
+
+    def label(self, sequence):
+        """
+        Generates the labels for a sequence
+
+        :param sequence: The sequence to segment
+        :type sequence: list or str
+        :return: A list of morpheme/label pairs
+        :rtype: list of (str, str)
+        """
+        return [label for _, label in self.annotate(sequence)]
 
     def __merge_labels(self, sequence, labels):
         segments = []
