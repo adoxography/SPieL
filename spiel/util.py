@@ -4,6 +4,7 @@ spiel.util
 Utility methods for SPieL
 """
 import collections
+from itertools import zip_longest
 
 
 def flatten(lst):
@@ -16,6 +17,16 @@ def flatten(lst):
             yield from flatten(elm)
         else:
             yield elm
+
+
+def grouper(n, iterable, fillvalue=None):
+    """
+    Iterates over an iterable in slices, like Ruby's Enumerable#each_slice
+
+    see https://docs.python.org/3/library/itertools.html#recipes
+    """
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
 
 
 def all_permutations(options):

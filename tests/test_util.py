@@ -1,6 +1,6 @@
 # coding: spec
 from unittest import TestCase
-from spiel.util import all_permutations, pad
+from spiel.util import all_permutations, pad, grouper
 
 
 describe TestCase 'all_permutations':
@@ -31,3 +31,10 @@ describe TestCase 'pad':
     it 'adds elements to either side of a list':
         padded = pad(['f', 'oo'], '_', 3)
         self.assertEqual(padded, ['_', '_', '_', 'f', 'oo', '_', '_', '_'])
+
+
+describe TestCase 'grouper':
+    it 'fills missing values with fillvalue':
+        iterable = 'abcdefg'
+        iterations = list(grouper(4, iterable, fillvalue='foo'))
+        self.assertEqual(iterations[-1][-1], 'foo')
