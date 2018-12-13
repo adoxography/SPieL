@@ -22,8 +22,8 @@ def init_labeller(instances):
     return labeller
 
 
-def main(file_name=None):
-    file_name = file_name or sys.argv[1]
+def main():
+    file_name = sys.argv[1]
 
     instances = load_instances(file_name)
     segmenter = init_segmenter(instances)

@@ -22,6 +22,7 @@ setup(name='spiel',
       ],
       test_suite='nose.collector',
       tests_require=[
-          'coverage==4.5.2'
+          'coverage==4.5.2',
+          'nose-pathmunge'
       ],
       zip_safe=False)
