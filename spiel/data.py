@@ -21,6 +21,16 @@ class Instance:
         :param labels: The labels for each segment
         :type labels: list of str
         """
+        if len(shape) == 0:
+            raise ValueError(f"Shape cannot be empty. (Segments: {segments})")
+
+        if len(segments) == 0:
+            raise ValueError(f"Segments cannot be empty. (Shape: {shape})")
+
+        if not len(segments) == len(labels):
+            raise ValueError(f"Number of segments must match number of \
+labels; got {len(segments)} segments, but {len(labels)} labels.")
+
         self.shape = shape
         self.segments = segments
         self.labels = labels

@@ -4,11 +4,23 @@ from spiel.data import Instance, load
 
 
 describe TestCase 'Instance':
+    it 'raises an error if the number of segments do not match the number of labels':
+        with self.assertRaises(ValueError):
+            Instance('foo', ['f', 'o', 'o'], ['b', 'a'])
+
+    it 'ensures that its shape is not empty':
+        with self.assertRaises(ValueError):
+            Instance('', ['f', 'o', 'o'], ['b', 'a', 'r'])
+
+    it 'ensures that its segments are not empty':
+        with self.assertRaises(ValueError):
+            Instance('foo', [], [])
+
     describe 'annotations':
         it 'combines its segments and labels into annotations':
             segments = ['f', 'o', 'o']
             labels = ['B', 'A', 'R']
-            instance = Instance('', segments, labels)
+            instance = Instance('foo', segments, labels)
             self.assertEqual(instance.annotations,
                              [('f', 'B'), ('o', 'A'), ('o', 'R')])
 
@@ -19,7 +31,7 @@ describe TestCase 'Instance':
             self.assertEqual(instance_1, instance_2)
 
         it 'does not equal another instance when its properties do not match':
-            instance_1 = Instance('foo', ['f', 'o', ], ['B', 'A', 'R'])
+            instance_1 = Instance('foo', ['f', 'o', ], ['B', 'A'])
             instance_2 = Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R'])
             self.assertNotEqual(instance_1, instance_2)
 
