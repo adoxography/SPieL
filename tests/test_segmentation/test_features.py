@@ -1,6 +1,4 @@
 # coding: spec
-
-from unittest import TestCase
 import re
 from spiel.segmentation.features import (
     Featurizer,
@@ -10,7 +8,7 @@ from spiel.segmentation.features import (
 )
 
 
-describe TestCase 'Featurizer':
+describe 'Featurizer':
     describe 'convert_pairs':
         it 'returns three training instances when given a single character':
             featurizer = Featurizer()
@@ -181,7 +179,7 @@ describe TestCase 'Featurizer':
             self.assertEqual(labels, ['O', 'B', 'I', 'I', 'B', 'I'])
 
 
-describe TestCase 'concat_annotations':
+describe 'concat_annotations':
     it 'returns an empty string if no annotations are provided':
         concat = concat_annotations([])
         self.assertEqual(concat, '')
@@ -191,7 +189,7 @@ describe TestCase 'concat_annotations':
         self.assertEqual(concat, 'foobar')
 
 
-describe TestCase 'label_annotations':
+describe 'label_annotations':
     it 'returns an empty list if no annotations are provided':
         labels = label_annotations([], 'I')
         self.assertEqual(labels, [])

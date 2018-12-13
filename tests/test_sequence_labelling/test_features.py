@@ -1,10 +1,8 @@
 # coding: spec
-
-from unittest import TestCase
 from spiel.sequence_labelling import Featurizer
 
 
-describe TestCase 'Featurizer':
+describe 'Featurizer':
     before_each:
         self.featurizer = Featurizer()
 

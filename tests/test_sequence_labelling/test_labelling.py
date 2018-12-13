@@ -1,6 +1,4 @@
 # coding: spec
-
-from unittest import TestCase
 from spiel.sequence_labelling import SequenceLabeller
 from spiel.sequence_labelling.labelling import LabellingException
 
@@ -27,7 +25,7 @@ class DummyClassifier:
         return ['FOO', 'BAR']
 
 
-describe TestCase 'SequenceLabeller':
+describe 'SequenceLabeller':
     describe 'train':
         it 'passes the supplied data on to the classifier':
             labeller = SequenceLabeller(DummyClassifier)

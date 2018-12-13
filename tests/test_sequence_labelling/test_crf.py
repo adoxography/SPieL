@@ -1,13 +1,11 @@
 # coding: spec
-
-from unittest import TestCase
 from pathlib import Path
 
 from sklearn_crfsuite import CRF
 
 from spiel.sequence_labelling import SequenceClassifier
 
-describe TestCase 'SequenceClassifier':
+describe 'SequenceClassifier':
     before_each:
         self.features = [
             [{'x': 'a'}, {'x': 'b'}],

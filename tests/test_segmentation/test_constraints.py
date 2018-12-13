@@ -1,6 +1,4 @@
 # coding: spec
-
-from unittest import TestCase
 import re
 from spiel.segmentation import ConstraintSegmenter, Featurizer
 from spiel.segmentation.constraints import (
@@ -63,7 +61,7 @@ class DummyClassifier(ClassifierAdaptor):
         ]
 
 
-describe TestCase 'ConstraintSegmenter':
+describe 'ConstraintSegmenter':
     before_each:
         self.train_shapes = ['fo']
         self.train_annotations = [[('f', 'FOO'), ('o', 'BAR')]]
@@ -197,7 +195,7 @@ describe TestCase 'ConstraintSegmenter':
             self.assertEqual(labels, ['FOO', 'BAR'])
 
 
-describe TestCase 'generate_constraints':
+describe 'generate_constraints':
     it 'generates constraints for a feature set':
         distribution = [
             ('_-_-FOO', .9),
@@ -219,7 +217,7 @@ describe TestCase 'generate_constraints':
         self.assertEqual(constraints, target)
 
 
-describe TestCase 'generate_options':
+describe 'generate_options':
     it 'returns a list with six more elements than the string passed in':
         constraints = {
             Constraint((0, 3), '_-_-FOO'): 0.9,

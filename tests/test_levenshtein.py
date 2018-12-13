@@ -1,11 +1,9 @@
 # coding: spec
-
-from unittest import TestCase
 from spiel import levenshtein
 from spiel.levenshtein import DeleteOperation, InsertOperation, ReplaceOperation
 
 
-describe TestCase 'distance':
+describe 'distance':
     it 'returns 0 for identical strings':
         distance = levenshtein.distance('foo', 'foo')
         self.assertEqual(distance, 0)
@@ -27,7 +25,7 @@ describe TestCase 'distance':
         self.assertEqual(distance, 3)
 
 
-describe TestCase 'operations':
+describe 'operations':
     it 'returns an empty generator for identical strings':
         operations = levenshtein.operations('foo', 'foo')
         self.assertEqual(list(operations), [])
@@ -53,7 +51,7 @@ describe TestCase 'operations':
         ])
 
 
-describe TestCase 'apply_operations':
+describe 'apply_operations':
     it 'does nothing if there are no operations':
         operations = []
         output = levenshtein.apply_operations('foo', 'bar', operations)
@@ -91,7 +89,7 @@ describe TestCase 'apply_operations':
         self.assertEqual(output, 'fbo')
 
 
-describe TestCase 'annotate':
+describe 'annotate':
     it 'does nothing if no operations are provided':
         annotation = levenshtein.annotate(['f', 'o', 'o'], '', [])
         self.assertEqual(annotation, ['f', 'o', 'o'])
@@ -125,7 +123,7 @@ describe TestCase 'annotate':
         self.assertEqual(annotation, ['b+R(f,b)', 'a+I(r)+D(o)'])
 
 
-describe TestCase 'ReplaceOperation':
+describe 'ReplaceOperation':
     describe 'apply':
         it 'replaces a character in an origin list with a character in a reference list':
             operation = ReplaceOperation(1, 3)
@@ -150,7 +148,7 @@ describe TestCase 'ReplaceOperation':
         self.assertEqual(str(operation), 'Replace 1 with 5')
 
 
-describe TestCase 'InsertOperation':
+describe 'InsertOperation':
     describe 'apply':
         it 'inserts a character in the origin list using a reference':
             operation = InsertOperation(2, 1)
@@ -175,7 +173,7 @@ describe TestCase 'InsertOperation':
         self.assertEqual(str(operation), 'Insert 5 at position 1')
 
 
-describe TestCase 'DeleteOperation':
+describe 'DeleteOperation':
     describe 'apply':
         it 'deletes a character in the origin list':
             operation = DeleteOperation(1)

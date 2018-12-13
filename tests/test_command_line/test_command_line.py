@@ -1,11 +1,9 @@
 # coding: spec
-from unittest import TestCase
+from util import captured_output, command_line_args
 from spiel.command_line import main
 
-from util import captured_output, command_line_args
 
-
-describe TestCase 'main':
+describe 'main':
     @command_line_args('tests/test_command_line/resources/instances.txt')
     it 'runs':
         with captured_output() as (out, err):

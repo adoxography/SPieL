@@ -1,9 +1,8 @@
 # coding: spec
-from unittest import TestCase
 from spiel.util import all_permutations, pad, grouper
 
 
-describe TestCase 'all_permutations':
+describe 'all_permutations':
     it 'combines all possible options':
         options = [set(['a', 'b']), set(['c', 'd']), set(['e', 'f'])]
         solutions = all_permutations(options)
@@ -19,7 +18,7 @@ describe TestCase 'all_permutations':
         ])
 
 
-describe TestCase 'pad':
+describe 'pad':
     it 'adds a character to either side of a string':
         padded = pad('foo', '_', 1)
         self.assertEqual(padded, '_foo_')
@@ -33,7 +32,7 @@ describe TestCase 'pad':
         self.assertEqual(padded, ['_', '_', '_', 'f', 'oo', '_', '_', '_'])
 
 
-describe TestCase 'grouper':
+describe 'grouper':
     it 'fills missing values with fillvalue':
         iterable = 'abcdefg'
         iterations = list(grouper(4, iterable, fillvalue='foo'))

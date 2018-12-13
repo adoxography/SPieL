@@ -1,9 +1,8 @@
 # coding: spec
-from unittest import TestCase
 from spiel.data import Instance, load
 
 
-describe TestCase 'Instance':
+describe 'Instance':
     it 'raises an error if the number of segments do not match the number of labels':
         with self.assertRaises(ValueError):
             Instance('foo', ['f', 'o', 'o'], ['b', 'a'])
@@ -36,7 +35,7 @@ describe TestCase 'Instance':
             self.assertNotEqual(instance_1, instance_2)
 
 
-describe TestCase 'load':
+describe 'load':
     it 'reads an instance from a file':
         instances = load('tests/test_data/resources/instance.txt')
         self.assertEqual(instances,

@@ -1,12 +1,10 @@
 # coding: spec
-
-from unittest import TestCase
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from spiel.segmentation.classification import SKLearnNaiveBayesClassifier
 
-describe TestCase 'SKLearnNaiveBayesClassifier':
+describe 'SKLearnNaiveBayesClassifier':
     describe 'train':
         it 'creates a classifier containing a dict vectorizer and a NB classifier':
             data = [({'foo': 'bar'}, 'FOO'), ({'foo': 'y'}, 'BAR')]
