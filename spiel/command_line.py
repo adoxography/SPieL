@@ -16,6 +16,7 @@ from spiel.sequence_labelling import SequenceLabeller
 def parse_args():
     parser = OptionParser()
     parser.add_option('--train', dest='train_file')
+    parser.add_option('--test', dest='test_file')
     return parser.parse_args()
 
 
@@ -53,13 +54,18 @@ def run_pipeline(segmenter, labeller, instances):
 
 def main():
     options, args = parse_args()
-    train_file = options.train_file
 
-    if train_file is None:
+    if options.train_file is None:
         raise ValueError('The --train flag is required')
 
-    instances = load_instances(train_file)
-    segmenter = init_segmenter(instances)
-    labeller = init_labeller(instances)
+    train_instances = load_instances(options.train_file)
+    segmenter = init_segmenter(train_instances)
+    labeller = init_labeller(train_instances)
 
-    run_pipeline(segmenter, labeller, instances)
+    print('Train results')
+    run_pipeline(segmenter, labeller, train_instances)
+
+    if options.test_file:
+        test_instances = load_instances(options.test_file)
+        print('\nTest results')
+        run_pipeline(segmenter, labeller, test_instances)
