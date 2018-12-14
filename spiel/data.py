@@ -56,6 +56,13 @@ class Instance:
         """
         return list(zip(self.segments, self.labels))
 
+    def annotation_string(self):
+        """
+        Returns a string representation of the instance's segments and labels
+        """
+        return '-'.join([f"{segment}/{label}"
+                         for segment, label in self.annotations])
+
     def __eq__(self, other):
         return self.shape == other.shape and \
                self.segments == other.segments and \

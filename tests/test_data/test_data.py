@@ -11,6 +11,12 @@ describe 'Instance':
             self.assertEqual(instance.annotations,
                              [('f', 'B'), ('o', 'A'), ('o', 'R')])
 
+    describe 'annotation_string':
+        it "presents the instance's annotation as a string":
+            instance = Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R'])
+            self.assertEqual(instance.annotation_string(),
+                             'f/B-o/A-o/R')
+
     describe '__eq__':
         it 'equals another instance when its properties match':
             instance_1 = Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R'])

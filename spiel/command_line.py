@@ -47,10 +47,7 @@ def run_pipeline(segmenter, labeller, instances):
         results = [f"Predicted: {prediction}"]
 
         if instance.segments:
-            target = '-'.join([f"{segment}/{label}"
-                               for segment, label
-                               in zip(instance.segments, instance.labels)])
-            results.append(f"Actual: {target}")
+            results.append(f"Actual: {instance.annotation_string()}")
 
         print(f"Shape: {instance.shape}")
         print('\t'.join(results))
