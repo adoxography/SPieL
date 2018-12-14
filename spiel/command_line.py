@@ -6,11 +6,17 @@ Command line interface into SPieL
 Usage:
 spiel [data_file]
 """
-import sys
+from optparse import OptionParser
 
 from spiel.data import load_file as load_instances
 from spiel.segmentation import ConstraintSegmenter, Featurizer
 from spiel.sequence_labelling import SequenceLabeller
+
+
+def parse_args():
+    parser = OptionParser()
+    parser.add_option('--train', dest='train_file')
+    return parser.parse_args()
 
 
 def init_segmenter(instances):
@@ -31,9 +37,10 @@ def init_labeller(instances):
 
 
 def main():
-    file_name = sys.argv[1]
+    options, args = parse_args()
+    train_file = options.train_file
 
-    instances = load_instances(file_name)
+    instances = load_instances(train_file)
     segmenter = init_segmenter(instances)
     labeller = init_labeller(instances)
 

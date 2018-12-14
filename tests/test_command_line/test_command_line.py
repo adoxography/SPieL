@@ -4,7 +4,7 @@ from spiel.command_line import main
 
 
 describe 'main':
-    @command_line_args('tests/test_command_line/resources/instances.txt')
+    @command_line_args('--train', 'tests/test_command_line/resources/instances.txt')
     it 'runs':
         with captured_output() as (out, err):
             main()
