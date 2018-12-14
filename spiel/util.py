@@ -19,13 +19,13 @@ def flatten(lst):
             yield elm
 
 
-def grouper(n, iterable, fillvalue=None):
+def grouper(per_slice, iterable, fillvalue=None):
     """
     Iterates over an iterable in slices, like Ruby's Enumerable#each_slice
 
     see https://docs.python.org/3/library/itertools.html#recipes
     """
-    args = [iter(iterable)] * n
+    args = [iter(iterable)] * per_slice
     return zip_longest(*args, fillvalue=fillvalue)
 
 
