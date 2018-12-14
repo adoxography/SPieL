@@ -1,7 +1,8 @@
 """
 spiel.sequence_labelling.labelling
 """
-from spiel.sequence_labelling import Featurizer, SequenceClassifier
+from spiel.sequence_labelling.features import Featurizer
+from spiel.sequence_labelling.crf import SequenceClassifier
 
 
 class LabellingException(RuntimeError):
