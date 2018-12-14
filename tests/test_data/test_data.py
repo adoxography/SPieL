@@ -1,5 +1,5 @@
 # coding: spec
-from spiel.data import Instance, load, load_file
+from spiel.data import Instance, load, load_file, ParseError
 
 
 describe 'Instance':
@@ -43,30 +43,54 @@ describe 'load':
                          [Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R']),
                           Instance('ba', ['b', 'a',], ['A', 'B'])])
 
-    it 'raises an error if fewer than three lines are present':
-        with self.assertRaises(ValueError) as e:
-            load(['foo'])
-        self.assertEqual(str(e.exception), 'Not enough fields provided')
-
     it 'raises an error if more than three lines are present':
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ParseError) as e:
             load(['foo', 'f o o', 'B A R', 'baz'])
         self.assertEqual(str(e.exception), 'Too many fields provided')
 
     it 'raises an error if the number of segments do not match the number of labels':
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ParseError):
             load(['foo', 'f o o', 'b a'])
 
     it 'ensures that its shape is not empty':
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ParseError):
             load(['', 'f o o', 'b a r'])
-
-    it 'ensures that its segments are not empty':
-        with self.assertRaises(ValueError):
-            load(['foo', '', ''])
 
     it 'handles multiple blank lines':
         instances = load(['foo', 'f o o', 'B A R', '', '', 'ba', 'b a', 'A B'])
         self.assertEqual(instances,
                          [Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R']),
                           Instance('ba', ['b', 'a',], ['A', 'B'])])
+
+    context 'strict mode':
+        it 'raises an error if fewer than three lines are present':
+            with self.assertRaises(ParseError) as e:
+                load(['foo'], strict=True)
+            self.assertEqual(str(e.exception), 'Not enough fields provided')
+
+        it 'ensures that its segments are not empty':
+            with self.assertRaises(ParseError):
+                load(['foo', '', ''], strict=True)
+
+    context 'not strict mode':
+        it 'reads an instance with just a shape':
+            instances = load(['foo'], strict=False)
+            self.assertEqual(instances, [Instance('foo', None, None)])
+
+        it 'reads multiple instances of just shapes':
+            instances = load(['foo', '', 'bar'], strict=False)
+            self.assertEqual(instances,
+                             [Instance('foo', None, None),
+                              Instance('bar', None, None)])
+
+        it 'reads mixed shapes and full instances':
+            instances = load(['foo', '', 'ba', 'b a', 'A B', '', 'baz'],
+                             strict=False)
+            self.assertEqual(instances,
+                             [Instance('foo', None, None),
+                              Instance('ba', ['b', 'a'], ['A', 'B']),
+                              Instance('baz', None, None)])
+
+        it 'raises an error if only two lines are present':
+            with self.assertRaises(ParseError):
+                load(['foo', 'f o o'], strict=True)
