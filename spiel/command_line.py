@@ -14,6 +14,9 @@ from spiel.sequence_labelling import SequenceLabeller
 
 
 def parse_args():
+    """
+    Parses the arguments from the command line
+    """
     parser = OptionParser()
     parser.add_option('--train', dest='train_file')
     parser.add_option('--test', dest='test_file')
@@ -21,6 +24,13 @@ def parse_args():
 
 
 def init_segmenter(instances):
+    """
+    Initializes the segmenter
+
+    :param instances: The instances to train the segmenter on
+    :type instances: list of Instance
+    :rtype: ConstraintSegmenter
+    """
     featurizer = Featurizer(mode='basic')
     segmenter = ConstraintSegmenter(featurizer=featurizer)
 
@@ -31,6 +41,13 @@ def init_segmenter(instances):
 
 
 def init_labeller(instances):
+    """
+    Initializes the labeller
+
+    :param instances: The instances to train the labeller on
+    :type instances: list of Instance
+    :rtype: SequenceLabeller
+    """
     labeller = SequenceLabeller()
     data = [(instance.segments, instance.labels) for instance in instances]
     labeller.train(*zip(*data), grid_search=True)
@@ -38,6 +55,15 @@ def init_labeller(instances):
 
 
 def run_pipeline(segmenter, labeller, instances):
+    """
+    Runs the segmenter/labeller pipeline on a list of instances and prints the
+    results to the console
+
+    :param segmenter: An object to segment the instances into tokens
+    :type segmenter: ConstraintSegmenter
+    :param labeller: An object to label the tokens
+    :type labeller: SequenceLabeller
+    """
     for instance in instances:
         segments = segmenter.segment(instance.shape)
         labels = labeller.label(segments)
@@ -54,7 +80,10 @@ def run_pipeline(segmenter, labeller, instances):
 
 
 def main():
-    options, args = parse_args()
+    """
+    Entry point into the script
+    """
+    options, _ = parse_args()
 
     if options.train_file is None:
         raise ValueError('The --train flag is required')
