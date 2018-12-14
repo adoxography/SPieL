@@ -30,10 +30,19 @@ class Instance:
 
     @staticmethod
     def fit(lines, strict):
+        """
+        Generates an Instance object from lines of text
+
+        :param lines: The lines to generate from
+        :type lines: list of str
+        :param strict: Whether the Instance must have segments and labels
+        :type strict: bool
+        :rtype: Instance
+        """
         try:
             shape, segments, labels = lines
         except ValueError:
-            if 3 < len(lines) or strict:
+            if len(lines) > 3 or strict:
                 raise ParseError("Unexpected number of fields")
             shape, segments, labels = lines[0], None, None
 
@@ -69,8 +78,8 @@ def load_file(file_name, strict=True):
     """
     Loads a list of instances from a file
     """
-    with open(file_name) as f:
-        return load(f, strict)
+    with open(file_name) as instance_file:
+        return load(instance_file, strict)
 
 
 def load(lines, strict=True):
@@ -93,7 +102,7 @@ def load(lines, strict=True):
 
     for line in lines:
         line = line.strip()
-        if len(line) == 0:
+        if not line:
             if data:
                 instances.append(Instance.fit(data, strict))
                 data = []
