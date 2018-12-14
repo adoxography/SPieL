@@ -4,7 +4,7 @@ spiel.command_line
 Command line interface into SPieL
 
 Usage:
-spiel [data_file]
+spiel --train TRAIN_FILE [--test TEST_FILE]
 """
 from optparse import OptionParser
 
@@ -44,12 +44,16 @@ def run_pipeline(segmenter, labeller, instances):
 
         prediction = '-'.join([f"{segment}/{label}"
                                for segment, label in zip(segments, labels)])
-        target = '-'.join([f"{segment}/{label}"
-                           for segment, label
-                           in zip(instance.segments, instance.labels)])
+        results = [f"Predicted: {prediction}"]
+
+        if instance.segments:
+            target = '-'.join([f"{segment}/{label}"
+                               for segment, label
+                               in zip(instance.segments, instance.labels)])
+            results.append(f"Actual: {target}")
 
         print(f"Shape: {instance.shape}")
-        print(f"Predicted: {prediction}\tActual: {target}")
+        print('\t'.join(results))
 
 
 def main():
@@ -66,6 +70,6 @@ def main():
     run_pipeline(segmenter, labeller, train_instances)
 
     if options.test_file:
-        test_instances = load_instances(options.test_file)
+        test_instances = load_instances(options.test_file, strict=False)
         print('\nTest results')
         run_pipeline(segmenter, labeller, test_instances)

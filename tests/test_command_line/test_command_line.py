@@ -46,4 +46,6 @@ Predicted: ba/C-z/E\tActual: ba/C-z/E
 
 Test results
 Shape: forba
-Predicted: f/A-o/B-r/D-ba/C\tActual: f/A-o/B-r/D-ba/C""")
+Predicted: f/A-o/B-r/D-ba/C\tActual: f/A-o/B-r/D-ba/C
+Shape: fo
+Predicted: f/A-o/B""")
