@@ -4,12 +4,6 @@ from spiel.command_line import main
 
 
 describe 'main':
-    @command_line_args()
-    it 'exits if no training file is supplied':
-        with self.assertRaises(ValueError):
-            with captured_output():
-                main()
-
     @command_line_args('--train',
                        'tests/test_command_line/resources/train_instances.txt')
     it 'runs if only training instances are supplied':

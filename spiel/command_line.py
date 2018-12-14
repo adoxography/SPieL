@@ -6,7 +6,7 @@ Command line interface into SPieL
 Usage:
 spiel --train TRAIN_FILE [--test TEST_FILE]
 """
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 from spiel.data import load_file as load_instances
 from spiel.segmentation import ConstraintSegmenter, Featurizer
@@ -17,9 +17,9 @@ def parse_args():
     """
     Parses the arguments from the command line
     """
-    parser = OptionParser()
-    parser.add_option('--train', dest='train_file')
-    parser.add_option('--test', dest='test_file')
+    parser = ArgumentParser()
+    parser.add_argument('--train', dest='train_file', required=True)
+    parser.add_argument('--test', dest='test_file')
     return parser.parse_args()
 
 
@@ -83,19 +83,16 @@ def main():
     """
     Entry point into the script
     """
-    options, _ = parse_args()
+    args = parse_args()
 
-    if options.train_file is None:
-        raise ValueError('The --train flag is required')
-
-    train_instances = load_instances(options.train_file)
+    train_instances = load_instances(args.train_file)
     segmenter = init_segmenter(train_instances)
     labeller = init_labeller(train_instances)
 
     print('Train results')
     run_pipeline(segmenter, labeller, train_instances)
 
-    if options.test_file:
-        test_instances = load_instances(options.test_file, strict=False)
+    if args.test_file:
+        test_instances = load_instances(args.test_file, strict=False)
         print('\nTest results')
         run_pipeline(segmenter, labeller, test_instances)
