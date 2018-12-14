@@ -17,3 +17,9 @@ Shape: bar
 Predicted: ba/C-r/D\tActual: ba/C-r/D
 Shape: baz
 Predicted: ba/C-z/E\tActual: ba/C-z/E""")
+
+    @command_line_args()
+    it 'exits if no training file is supplied':
+        with self.assertRaises(ValueError):
+            with captured_output():
+                main()

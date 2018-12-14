@@ -40,6 +40,9 @@ def main():
     options, args = parse_args()
     train_file = options.train_file
 
+    if train_file is None:
+        raise ValueError('The --train flag is required')
+
     instances = load_instances(train_file)
     segmenter = init_segmenter(instances)
     labeller = init_labeller(instances)
