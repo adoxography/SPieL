@@ -33,13 +33,9 @@ class Instance:
         try:
             shape, segments, labels = lines
         except ValueError:
-            if len(lines) < 3:
-                if strict:
-                    raise ParseError("Not enough fields provided")
-                else:
-                    shape, segments, labels = lines[0], None, None
-            else:
-                raise ParseError("Too many fields provided")
+            if 3 < len(lines) or strict:
+                raise ParseError("Unexpected number of fields")
+            shape, segments, labels = lines[0], None, None
 
         if (segments or labels) and not len(segments) == len(labels):
             raise ParseError(f"Number of segments must match number of \

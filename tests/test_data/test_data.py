@@ -50,9 +50,8 @@ describe 'load':
                           Instance('ba', ['b', 'a',], ['A', 'B'])])
 
     it 'raises an error if more than three lines are present':
-        with self.assertRaises(ParseError) as e:
+        with self.assertRaises(ParseError):
             load(['foo', 'f o o', 'B A R', 'baz'])
-        self.assertEqual(str(e.exception), 'Too many fields provided')
 
     it 'raises an error if the number of segments do not match the number of labels':
         with self.assertRaises(ParseError):
@@ -70,9 +69,8 @@ describe 'load':
 
     context 'strict mode':
         it 'raises an error if fewer than three lines are present':
-            with self.assertRaises(ParseError) as e:
+            with self.assertRaises(ParseError):
                 load(['foo'], strict=True)
-            self.assertEqual(str(e.exception), 'Not enough fields provided')
 
         it 'ensures that its segments are not empty':
             with self.assertRaises(ParseError):
