@@ -36,17 +36,7 @@ def init_labeller(instances):
     return labeller
 
 
-def main():
-    options, args = parse_args()
-    train_file = options.train_file
-
-    if train_file is None:
-        raise ValueError('The --train flag is required')
-
-    instances = load_instances(train_file)
-    segmenter = init_segmenter(instances)
-    labeller = init_labeller(instances)
-
+def run_pipeline(segmenter, labeller, instances):
     for instance in instances:
         segments = segmenter.segment(instance.shape)
         labels = labeller.label(segments)
@@ -59,3 +49,17 @@ def main():
 
         print(f"Shape: {instance.shape}")
         print(f"Predicted: {prediction}\tActual: {target}")
+
+
+def main():
+    options, args = parse_args()
+    train_file = options.train_file
+
+    if train_file is None:
+        raise ValueError('The --train flag is required')
+
+    instances = load_instances(train_file)
+    segmenter = init_segmenter(instances)
+    labeller = init_labeller(instances)
+
+    run_pipeline(segmenter, labeller, instances)
