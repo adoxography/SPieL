@@ -3,7 +3,6 @@ spiel.data
 
 Module for organizing input data to the SPieL system
 """
-from spiel.util import grouper
 
 
 class Instance:
@@ -25,6 +24,22 @@ class Instance:
         self.segments = segments
         self.labels = labels
 
+    @staticmethod
+    def fit(lines):
+        try:
+            shape, segments, labels = lines
+        except ValueError:
+            if len(lines) < 3:
+                raise ValueError("Not enough fields provided")
+            else:
+                raise ValueError("Too many fields provided")
+
+        if not len(segments) == len(labels):
+            raise ValueError(f"Number of segments must match number of \
+    labels; got segments '{segments}' segments, but labels '{labels}'.")
+
+        return Instance(''.join(shape), segments, labels)
+
     @property
     def annotations(self):
         """
@@ -40,44 +55,42 @@ class Instance:
                self.labels == other.labels
 
 
-def load(file_name):
+def load_file(file_name):
     """
     Loads a list of instances from a file
+    """
+    with open(file_name) as f:
+        return load(f)
 
-    Instances must be ordered as follows:
+
+def load(lines):
+    """
+    Loads a list of instances from a list of lines
+
+    Lines must be ordered as follows:
 
     Line 1*n: Shape
     Line 2*n: Segments
     Line 3*n: Labels
-    Line 4*n: ignored
+    Line 4*n: blank
 
     :return: A list of training instances
     :rtype: list of Instance
     """
     instances = []
 
-    with open(file_name) as f:
-        for shape, segments, labels, _ in grouper(4, f):
-            shape = shape.strip()
+    data = []
 
-            try:
-                segments = segments.split()
-                labels = labels.split()
-            except AttributeError:
-                raise ValueError(f"Not enough fields provided in {file_name}")
+    for line in lines:
+        line = line.strip()
+        if len(line) == 0:
+            if data:
+                instances.append(Instance.fit(data))
+                data = []
+        else:
+            data.append(line.split())
 
-            if len(shape) == 0:
-                raise ValueError(
-                    f"Shape cannot be empty. (Segments: {segments})"
-                )
-
-            if len(segments) == 0:
-                raise ValueError(f"Segments cannot be empty. (Shape: {shape})")
-
-            if not len(segments) == len(labels):
-                raise ValueError(f"Number of segments must match number of \
-    labels; got {len(segments)} segments, but {len(labels)} labels.")
-
-            instances.append(Instance(shape, segments, labels))
+    if data:
+        instances.append(Instance.fit(data))
 
     return instances

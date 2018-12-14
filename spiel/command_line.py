@@ -8,7 +8,7 @@ spiel [data_file]
 """
 import sys
 
-from spiel.data import load as load_instances
+from spiel.data import load_file as load_instances
 from spiel.segmentation import ConstraintSegmenter, Featurizer
 from spiel.sequence_labelling import SequenceLabeller
 
