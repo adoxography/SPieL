@@ -3,18 +3,6 @@ from spiel.data import Instance, load
 
 
 describe 'Instance':
-    it 'raises an error if the number of segments do not match the number of labels':
-        with self.assertRaises(ValueError):
-            Instance('foo', ['f', 'o', 'o'], ['b', 'a'])
-
-    it 'ensures that its shape is not empty':
-        with self.assertRaises(ValueError):
-            Instance('', ['f', 'o', 'o'], ['b', 'a', 'r'])
-
-    it 'ensures that its segments are not empty':
-        with self.assertRaises(ValueError):
-            Instance('foo', [], [])
-
     describe 'annotations':
         it 'combines its segments and labels into annotations':
             segments = ['f', 'o', 'o']
@@ -46,3 +34,19 @@ describe 'load':
         self.assertEqual(instances,
                          [Instance('foo', ['f', 'o', 'o'], ['B', 'A', 'R']),
                           Instance('ba', ['b', 'a',], ['A', 'B'])])
+
+    it 'raises an error if fewer than three lines are present':
+        with self.assertRaises(ValueError):
+            load('tests/test_data/resources/incomplete.txt')
+
+    it 'raises an error if the number of segments do not match the number of labels':
+        with self.assertRaises(ValueError):
+            load('tests/test_data/resources/ragged_segments.txt')
+
+    it 'ensures that its shape is not empty':
+        with self.assertRaises(ValueError):
+            load('tests/test_data/resources/empty_shape.txt')
+
+    it 'ensures that its segments are not empty':
+        with self.assertRaises(ValueError):
+            load('tests/test_data/resources/no_segments.txt')

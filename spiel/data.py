@@ -21,16 +21,6 @@ class Instance:
         :param labels: The labels for each segment
         :type labels: list of str
         """
-        if len(shape) == 0:
-            raise ValueError(f"Shape cannot be empty. (Segments: {segments})")
-
-        if len(segments) == 0:
-            raise ValueError(f"Segments cannot be empty. (Shape: {shape})")
-
-        if not len(segments) == len(labels):
-            raise ValueError(f"Number of segments must match number of \
-labels; got {len(segments)} segments, but {len(labels)} labels.")
-
         self.shape = shape
         self.segments = segments
         self.labels = labels
@@ -69,8 +59,25 @@ def load(file_name):
     with open(file_name) as f:
         for shape, segments, labels, _ in grouper(4, f):
             shape = shape.strip()
-            segments = segments.split()
-            labels = labels.split()
+
+            try:
+                segments = segments.split()
+                labels = labels.split()
+            except AttributeError:
+                raise ValueError(f"Not enough fields provided in {file_name}")
+
+            if len(shape) == 0:
+                raise ValueError(
+                    f"Shape cannot be empty. (Segments: {segments})"
+                )
+
+            if len(segments) == 0:
+                raise ValueError(f"Segments cannot be empty. (Shape: {shape})")
+
+            if not len(segments) == len(labels):
+                raise ValueError(f"Number of segments must match number of \
+    labels; got {len(segments)} segments, but {len(labels)} labels.")
+
             instances.append(Instance(shape, segments, labels))
 
     return instances
