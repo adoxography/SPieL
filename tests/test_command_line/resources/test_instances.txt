@@ -3,3 +3,7 @@ f o r ba
 A B D C
 
 fo
+f o
+A B
+
+fo

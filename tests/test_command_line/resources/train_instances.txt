@@ -2,6 +2,10 @@ foo
 f o o
 A B B
 
+foo
+fo o
+F  B
+
 ba
 ba
 C

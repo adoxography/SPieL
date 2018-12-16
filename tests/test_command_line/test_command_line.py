@@ -10,15 +10,10 @@ describe 'main':
         with captured_output() as (out, err):
             main()
         output = out.getvalue().strip()
+        error = err.getvalue().strip()
+
         self.assertEqual(output, """Train results
-Shape: foo
-Predicted: f/A-o/B-o/B\tActual: f/A-o/B-o/B
-Shape: ba
-Predicted: ba/C\tActual: ba/C
-Shape: bar
-Predicted: ba/C-r/D\tActual: ba/C-r/D
-Shape: baz
-Predicted: ba/C-z/E\tActual: ba/C-z/E""")
+Accuracy: 0.8""")
 
     @command_line_args('--train',
                        'tests/test_command_line/resources/train_instances.txt',
@@ -29,17 +24,8 @@ Predicted: ba/C-z/E\tActual: ba/C-z/E""")
             main()
         output = out.getvalue().strip()
         self.assertEqual(output, """Train results
-Shape: foo
-Predicted: f/A-o/B-o/B\tActual: f/A-o/B-o/B
-Shape: ba
-Predicted: ba/C\tActual: ba/C
-Shape: bar
-Predicted: ba/C-r/D\tActual: ba/C-r/D
-Shape: baz
-Predicted: ba/C-z/E\tActual: ba/C-z/E
+Accuracy: 0.8
 
 Test results
-Shape: forba
-Predicted: f/A-o/B-r/D-ba/C\tActual: f/A-o/B-r/D-ba/C
-Shape: fo
-Predicted: f/A-o/B""")
+Shape 'fo' segmented to 'f/A-o/B'.
+Accuracy: 0.5""")

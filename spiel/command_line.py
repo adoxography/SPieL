@@ -6,6 +6,7 @@ Command line interface into SPieL
 Usage:
 spiel --train TRAIN_FILE [--test TEST_FILE]
 """
+import sys
 from argparse import ArgumentParser
 
 from spiel.data import load_file as load_instances
@@ -64,19 +65,29 @@ def run_pipeline(segmenter, labeller, instances):
     :param labeller: An object to label the tokens
     :type labeller: SequenceLabeller
     """
+    num_tests = 0
+    num_right = 0
+
     for instance in instances:
         segments = segmenter.segment(instance.shape)
         labels = labeller.label(segments)
 
         prediction = '-'.join([f"{segment}/{label}"
                                for segment, label in zip(segments, labels)])
-        results = [f"Predicted: {prediction}"]
 
         if instance.segments:
-            results.append(f"Actual: {instance.annotation_string()}")
+            num_tests += 1
+            if instance.annotation_string() == prediction:
+                num_right += 1
+            else:
+                print(f"'{instance.shape}': expected \
+'{instance.annotation_string()}'; got '{prediction}'.",
+                      file=sys.stderr)
+        else:
+            print(f"Shape '{instance.shape}' segmented to '{prediction}'.")
 
-        print(f"Shape: {instance.shape}")
-        print('\t'.join(results))
+    if num_tests > 0:
+        print(f"Accuracy: {num_right/num_tests}")
 
 
 def main():
