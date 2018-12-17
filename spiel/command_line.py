@@ -7,6 +7,7 @@ Usage:
 spiel --train TRAIN_FILE [--test TEST_FILE]
 """
 import sys
+import re
 from argparse import ArgumentParser
 
 from spiel.data import load_file as load_instances
@@ -24,15 +25,16 @@ def parse_args():
     return parser.parse_args()
 
 
-def init_segmenter(instances):
+def init_segmenter(instances, featurizer):
     """
     Initializes the segmenter
 
     :param instances: The instances to train the segmenter on
     :type instances: list of Instance
+    :param featurizer: The featurizer to use to split the instances:
+    :type featurizer: spiel.segmentation.Featurizer
     :rtype: ConstraintSegmenter
     """
-    featurizer = Featurizer(mode='basic')
     segmenter = ConstraintSegmenter(featurizer=featurizer)
 
     data = [(instance.shape, instance.annotations) for instance in instances]
@@ -41,16 +43,21 @@ def init_segmenter(instances):
     return segmenter
 
 
-def init_labeller(instances):
+def init_labeller(instances, featurizer):
     """
     Initializes the labeller
 
     :param instances: The instances to train the labeller on
     :type instances: list of Instance
+    :param featurizer: The featurizer to use to split the instances:
+    :type featurizer: spiel.segmentation.Featurizer
     :rtype: SequenceLabeller
     """
+    data = [list(zip(*featurizer.analogize(instance.shape,
+                                           instance.annotations)))
+            for instance in instances]
+
     labeller = SequenceLabeller()
-    data = [(instance.segments, instance.labels) for instance in instances]
     labeller.train(*zip(*data), grid_search=True)
     return labeller
 
@@ -64,6 +71,8 @@ def run_pipeline(segmenter, labeller, instances):
     :type segmenter: ConstraintSegmenter
     :param labeller: An object to label the tokens
     :type labeller: SequenceLabeller
+    :param instances: The instances to run the pipeline on
+    :type instances: list of Instance
     """
     num_tests = 0
     num_right = 0
@@ -77,7 +86,7 @@ def run_pipeline(segmenter, labeller, instances):
 
         if instance.segments:
             num_tests += 1
-            if instance.annotation_string() == prediction:
+            if instance.labels == labels:
                 num_right += 1
             else:
                 print(f"'{instance.shape}': expected \
@@ -97,8 +106,10 @@ def main():
     args = parse_args()
 
     train_instances = load_instances(args.train_file)
-    segmenter = init_segmenter(train_instances)
-    labeller = init_labeller(train_instances)
+    featurizer = Featurizer(mode='basic',
+                            tokenize=lambda x: re.findall(r'.[·]*', x))
+    segmenter = init_segmenter(train_instances, featurizer)
+    labeller = init_labeller(train_instances, featurizer)
 
     print('Train results')
     run_pipeline(segmenter, labeller, train_instances)

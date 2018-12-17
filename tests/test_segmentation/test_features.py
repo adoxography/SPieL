@@ -178,6 +178,30 @@ describe 'Featurizer':
             labels = featurizer.label('_fooba', annotations)
             self.assertEqual(labels, ['O', 'B', 'I', 'I', 'B', 'I'])
 
+    describe 'analogize':
+        context 'basic mode':
+            it 'segments a shape based on annotations':
+                featurizer = Featurizer(mode='basic')
+                shape = 'bar'
+                annotations = [('ba', 'X'), ('z', 'Y')]
+                analogy = featurizer.analogize(shape, annotations)
+                self.assertEqual(analogy, [('ba', 'X'), ('r', 'Y')])
+
+        context 'normal mode':
+            it 'segments a shape based on annotations':
+                featurizer = Featurizer()
+                shape = 'bar'
+                annotations = [('ba', 'X'), ('z', 'Y')]
+                analogy = featurizer.analogize(shape, annotations)
+                self.assertEqual(analogy, [('ba', 'X'), ('r', 'Y')])
+
+        it 'discards null morphemes':
+            featurizer = Featurizer()
+            shape = 'bar'
+            annotations = [('ba', 'X'), ('∅', 'Z'), ('z', 'Y')]
+            analogy = featurizer.analogize(shape, annotations)
+            self.assertEqual(analogy, [('ba', 'X'), ('r', 'Y')])
+
 
 describe 'concat_annotations':
     it 'returns an empty string if no annotations are provided':

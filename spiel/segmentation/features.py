@@ -98,6 +98,43 @@ but {len(labels)} labels provided")
 
         return instances
 
+    def analogize(self, shape, annotations):
+        """
+        Converts the segments of a set of annotations to match a given shape
+
+        Null segments will be removed during the process.
+
+        :param shape: A word to base the new segments off of
+        :type shape: str or list of str
+        :param annotations: Segment/label pairs
+        :type annotations: list of (str, str)
+        :return: The annotations with the segments replaced with those from
+                 the provided shape
+        :rtype: list of (str, str)
+        """
+        # Get rid of any null slots
+        annotations = [annotation for annotation in annotations
+                       if not annotation[0] == '∅']
+        labels = [label for _, label in annotations]
+
+        # Tokenize the shape if necessary
+        if isinstance(shape, str):
+            shape = self.tokenize(shape)
+
+        # Get a map of where the segmentations should occur
+        seg_map = self.label(shape, annotations)
+
+        # Split up the shape
+        segments = []
+        last = 0
+        for i, label in enumerate(seg_map):
+            if i > 0 and not label == 'I':
+                segments.append(''.join(shape[last:i]))
+                last = i
+        segments.append(''.join(shape[last:]))
+
+        return list(zip(segments, labels))
+
     def label(self, shape, annotations):
         """
         Generates a list of annotations corresponding to each element in
