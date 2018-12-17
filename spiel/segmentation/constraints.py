@@ -1,7 +1,8 @@
 """
 spiel.segmentation.constraints
 
-Module for segmenting strings based on constraints
+Module for segmenting strings based on constraints. Implementation based on
+van den Bosch and Canisius (2006). (http://aclweb.org/anthology/W06-3206)
 """
 import re
 from collections import defaultdict
