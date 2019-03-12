@@ -24,8 +24,8 @@ def _extract_vocab_data(source_files):
     vocab = set()
 
     for source_file in source_files:
-        with tf.gfile.Open(source_file) as f:
-            for line in f:
+        with tf.gfile.Open(source_file) as vocab_file:
+            for line in vocab_file:
                 tokens = line.split()
                 vocab.update(tokens)
 

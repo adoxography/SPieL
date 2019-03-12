@@ -207,6 +207,12 @@ class MultitaskProtoAlgonquian(multi_problem.MultiProblem,
         self.update_task_ids(vocab_size)
         return self.task_list[task_idx].task_id
 
+    @property
+    def num_training_examples(self):
+        """
+        Unused since is_generate_per_split is True
+        """
+
 
 @registry.register_problem
 class MultitaskProtoAlgonquianWithNoise(MultitaskProtoAlgonquian):

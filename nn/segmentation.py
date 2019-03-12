@@ -11,6 +11,10 @@ from . import util
 
 class SegmentationProblem(text_problems.Text2TextProblem,
                           util.SingleProcessProblem):
+    """
+    Defines a segmentation problem, which is essentially a translation problem
+    from unsegmented to segmented tokens.
+    """
     @property
     def is_generate_per_split(self):
         """
