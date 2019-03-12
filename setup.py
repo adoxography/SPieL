@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='spiel',
       version='0.1.0',
@@ -7,9 +7,14 @@ setup(name='spiel',
       author='Graham Still',
       author_email='gstill@uw.edu',
       license='MIT',
-      packages=['spiel'],
+      packages=find_packages(),
+      scripts=[
+          'scripts/spiel-t2t'
+      ],
       entry_points={
-          'console_scripts': ['spiel=spiel.command_line:main']
+          'console_scripts': [
+              'spiel=spiel.command_line:main',
+          ]
       },
       setup_requires=[
           'nose==1.3.7',
@@ -20,6 +25,8 @@ setup(name='spiel',
           'numpy==1.15.4',
           'scikit-learn==0.20.1',
           'sklearn-crfsuite',
+          'tensorflow==1.13.1',
+          'tensor2tensor==1.13.0'
       ],
       test_suite='nose.collector',
       tests_require=[

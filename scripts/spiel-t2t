@@ -1,0 +1,105 @@
+#!/bin/sh
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT_DIR="$SCRIPT_DIR/.."
+T2T_DIR="$ROOT_DIR/nn"
+
+generate_flag=''
+train_flag=''
+eval_flag=''
+
+PROBLEM=''
+MODEL=transformer
+HPARAMS=transformer_base
+BEAM_SIZE=4
+ALPHA=0.6
+
+#========================#
+# Parse the command line #
+#========================#
+while getopts 'p:gte' flag; do
+    case "${flag}" in
+        p) PROBLEM="$OPTARG" ;;
+        g) generate_flag='true' ;;
+        t) train_flag='true' ;;
+        e) eval_flag='true' ;;
+   esac
+done
+
+if [ -z $PROBLEM ]; then
+    echo "Please supply a problem with the -p flag."
+    exit 1
+fi
+
+if [ -z $generate_flag ] && [ -z $train_flag ] && [ -z $eval_flag ]; then
+    echo "Please supply at least one of -g, -t, or -e to specify an action"
+    exit 1
+fi
+
+#========================#
+# Set up the environment #
+#========================#
+# If there is a virtual environment in place, activate it before running anything
+if [ -d "$ROOT_DIR/.venv" ]; then
+    source "$ROOT_DIR/.venv/bin/activate"
+fi
+
+# Use the GPU-enabled version of tensorflow if it is available
+if [ $(pip freeze | grep tensorflow-gpu) ]; then
+    HPARAMS="${HPARAMS}_single_gpu"
+fi
+
+DATA_DIR="$T2T_DIR/data/generated_data"
+TMP_DIR="/tmp/t2t_datagen"
+TRAIN_DIR="$T2T_DIR/data/train_data/$PROBLEM/$MODEL-$HPARAMS"
+USR_DIR="$T2T_DIR"
+
+TEST_FILE="$DATA_DIR/pa_test.txt"
+GS_FILE="$DATA_DIR/gs.txt"
+RESULT_FILE="morphemes.txt"
+
+mkdir -p $DATA_DIR $TMP_DIR $TRAIN_DIR
+
+#=================#
+# Run the program #
+#=================#
+if [ $generate_flag ]; then
+    echo "#============================== GENERATING ==============================#"
+    t2t-datagen --data_dir=$DATA_DIR \
+                --tmp_dir=$TMP_DIR \
+                --problem=$PROBLEM \
+                --t2t_usr_dir=$USR_DIR 2>&1 | grep -v Warning
+fi
+
+if [ $train_flag ]; then
+    echo "#============================== TRAINING ===============================#"
+    t2t-trainer --data_dir=$DATA_DIR \
+                --problem=$PROBLEM \
+                --model=$MODEL \
+                --output_dir=$TRAIN_DIR \
+                --hparams_set=$HPARAMS \
+                --t2t_usr_dir=$USR_DIR 2>&1 | grep -v Warning
+fi
+
+if [ $eval_flag ]; then
+    echo "#============================= EVALUATING ==============================#"
+    # Make sure the outputs are starting from scratch
+    rm $TEST_FILE $GS_FILE 2>/dev/null
+
+    echo "k e s i t e n a w a r i" >> $TEST_FILE
+    echo "w a · p a n t a m e · k w e" >> $TEST_FILE
+    echo -e "k e - s i t - e n a w - a r i\nw a · p a n t - a m - e · k w - e" > $GS_FILE
+
+    # Test the model
+    t2t-decoder --data_dir=$DATA_DIR \
+                --problem=$PROBLEM \
+                --model=$MODEL \
+                --hparams_set=$HPARAMS \
+                --output_dir=$TRAIN_DIR \
+                --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA,multiproblem_task_id=259" \
+                --decode_from_file=$TEST_FILE \
+                --decode_to_file=$RESULT_FILE \
+                --t2t_usr_dir=$USR_DIR 2>&1 | grep -v Warning
+
+    # See the output
+    cat $RESULT_FILE
+fi
