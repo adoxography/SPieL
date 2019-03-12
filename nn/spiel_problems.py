@@ -73,6 +73,7 @@ class SpielProblem:
     SPieL problems use a common filesystem which requires a language_code. This
     class enforces that interface.
     """
+    # pylint: disable=R0903
     @property
     def language_code(self):
         """
@@ -86,18 +87,13 @@ class LanguageModel(text_problems.Text2SelfProblem, util.SingleProcessProblem,
     """
     Base SPieL language model. Just requires a language_code to work.
     """
+    # pylint: disable=W0223
     @property
     def is_generate_per_split(self):
         """
         Train and eval data come separately
         """
         return True
-
-    @property
-    def num_training_examples(self):
-        """
-        Unused since is_generate_per_split is True
-        """
 
     @property
     def vocab_type(self):
@@ -123,6 +119,7 @@ class SegmentationProblem(segmentation.SegmentationProblem, SpielProblem):
     """
     Base SPieL segmentation problem. Just requires a language_code to work.
     """
+    # pylint: disable=W0223
     def source_data_files(self, data_dir, tmp_dir, dataset_split):
         """
         Data files are the unsegmented (source) and segmented (target) files
@@ -135,27 +132,7 @@ class RecognitionProblem(recognition.RecognitionProblem, SpielProblem):
     """
     Base SPieL recognition problem.
     """
-    @property
-    def min_size(self):
-        """
-        Pass the error down to the subclass
-        """
-        raise NotImplementedError()
-
-    @property
-    def max_size(self):
-        """
-        Pass the error down to the subclass
-        """
-        raise NotImplementedError()
-
-    @property
-    def num_train_instances(self):
-        """
-        Pass the error down to the subclass
-        """
-        raise NotImplementedError()
-
+    # pylint: disable=W0223
     def source_data_files(self, data_dir, tmp_dir, dataset_split):
         """
         Only recognize the unsegmented data
@@ -179,12 +156,6 @@ class MultitaskProblem(multi_problem.MultiProblem, util.SingleProcessProblem):
         The list of tasks this problem handles
         """
         raise NotImplementedError()
-
-    @property
-    def num_training_examples(self):
-        """
-        Unused since is_generate_per_split is True
-        """
 
     @property
     def vocab_type(self):

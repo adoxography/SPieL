@@ -13,6 +13,7 @@ class LanguageModelProtoAlgonquian(spiel_problems.LanguageModel):
     """
     Basic language model for Proto-Algonquian
     """
+    # pylint: disable=W0223
     @property
     def language_code(self):
         """
@@ -75,6 +76,7 @@ class MultitaskProtoAlgonquian(spiel_problems.MultitaskProblem):
     Defines a multitask problem that trains a language model and a segmentation
     task at the same time
     """
+    # pylint: disable=W0223
     @property
     def problem_list(self):
         """
@@ -92,6 +94,7 @@ class MultitaskProtoAlgonquianWithNoise(spiel_problems.MultitaskProblem):
     Defines a multitask problem that trains a language model, a segmentation
     task, and a recognition task
     """
+    # pylint: disable=W0223
     @property
     def problem_list(self):
         """
