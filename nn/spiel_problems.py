@@ -19,7 +19,6 @@ from . import data as data_module
 
 
 DATA_PATH = os.path.split(os.path.realpath(data_module.__file__))[0]
-DATA_TGZ = os.path.join(DATA_PATH, 'pa-corpus.tgz')
 
 
 def _data_filenames(language_code, dataset_split, tmp_dir,
@@ -33,14 +32,14 @@ def _data_filenames(language_code, dataset_split, tmp_dir,
     :return: If with_segmented is True, a list of unsegmented and segmented
              file name tuples. If it is False, a list of unsegmented file names
     """
-    if dataset_split == problem.DatsetSplit.TRAIN:
+    if dataset_split == problem.DatasetSplit.TRAIN:
         data_group = 'train'
     else:
         data_group = 'dev'
 
     listing = [
         (os.path.join(tmp_dir, f'{language_code}-corpus', data_group,
-                      '{language_code}-{data_group}.original'),
+                      f'{language_code}-{data_group}.original'),
          os.path.join(tmp_dir, f'{language_code}-corpus', data_group,
                       f'{language_code}-{data_group}.segmented'))
     ]
@@ -50,20 +49,21 @@ def _data_filenames(language_code, dataset_split, tmp_dir,
     return listing
 
 
-def _maybe_copy_corpus(tmp_dir):
+def _maybe_copy_corpus(language_code, tmp_dir):
     """
     Unzips the data file into tensor2tensor's temporary directory if it isn't
     already there
     """
-    corpus_filename = os.path.basename(DATA_TGZ)
+    corpus_filename = language_code + '-corpus.tgz'
     corpus_filepath = os.path.join(tmp_dir, corpus_filename)
+    data_tgz = os.path.join(DATA_PATH, corpus_filename)
 
     if os.path.exists(corpus_filepath):
         return
 
     Path(tmp_dir).mkdir(parents=True, exist_ok=True)
 
-    copyfile(DATA_TGZ, corpus_filepath)
+    copyfile(data_tgz, corpus_filepath)
     with tarfile.open(corpus_filepath, 'r:gz') as corpus_tar:
         corpus_tar.extractall(tmp_dir)
 
@@ -110,7 +110,7 @@ class LanguageModel(text_problems.Text2SelfProblem, util.SingleProcessProblem,
         """
         Samples come from the unsegmented data files
         """
-        _maybe_copy_corpus(tmp_dir)
+        _maybe_copy_corpus(self.language_code, tmp_dir)
         files = _data_filenames(self.language_code, dataset_split,
                                 tmp_dir, False)
         for filepath in files:
@@ -127,7 +127,7 @@ class SegmentationProblem(segmentation.SegmentationProblem, SpielProblem):
         """
         Data files are the unsegmented (source) and segmented (target) files
         """
-        _maybe_copy_corpus(tmp_dir)
+        _maybe_copy_corpus(self.language_code, tmp_dir)
         return _data_filenames(self.language_code, dataset_split, tmp_dir)
 
 
@@ -160,6 +160,7 @@ class RecognitionProblem(recognition.RecognitionProblem, SpielProblem):
         """
         Only recognize the unsegmented data
         """
+        _maybe_copy_corpus(self.language_code, tmp_dir)
         return _data_filenames(self.language_code, problem.DatasetSplit.TRAIN,
                                tmp_dir, with_segmented=False)
 
