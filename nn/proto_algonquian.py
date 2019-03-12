@@ -3,148 +3,49 @@ nn.proto_algonquian
 
 tensor2tensor problem definitions for Proto-Algonquian
 """
-import os
-import tarfile
-from shutil import copyfile
-from pathlib import Path
-
-import tensorflow as tf
-from tensor2tensor.data_generators import problem, text_problems, multi_problem
 from tensor2tensor.utils import registry
 
-from . import segmentation, recognition
-from . import util
-from . import data as data_module
-
-
-DATA_PATH = os.path.split(os.path.realpath(data_module.__file__))[0]
-DATA_TGZ = os.path.join(DATA_PATH, 'pa-corpus.tgz')
-
-
-def _train_data_filenames(tmp_dir, with_segmented=True):
-    """
-    The names of the files that contain training data
-
-    :param tmp_dir: The location of the directory holding temporary
-                    tensor2tensor data
-    :param with_segmented: Whether to include the file with segmented data
-    :return: If with_segmented is True, a list of unsegmented and segmented
-             file name tuples. If it is False, a list of unsegmented file names
-    """
-    listing = [
-        (os.path.join(tmp_dir, 'pa-corpus', 'train', 'pa-train.original'),
-         os.path.join(tmp_dir, 'pa-corpus', 'train', 'pa-train.segmented'))
-    ]
-
-    if not with_segmented:
-        return [group[0] for group in listing]
-    return listing
-
-
-def _dev_data_filenames(tmp_dir, with_segmented=True):
-    """
-    The names of the files that contain dev data
-
-    :param tmp_dir: The location of the directory holding temporary
-                    tensor2tensor data
-    :param with_segmented: Whether to include the file with segmented data
-    :return: If with_segmented is True, a list of unsegmented and segmented
-             file name tuples. If it is False, a list of unsegmented file names
-    """
-    listing = [
-        (os.path.join(tmp_dir, 'pa-corpus', 'dev', 'pa-dev.original'),
-         os.path.join(tmp_dir, 'pa-corpus', 'dev', 'pa-dev.segmented'))
-    ]
-
-    if not with_segmented:
-        return [group[0] for group in listing]
-    return listing
-
-
-def _maybe_copy_corpus(tmp_dir):
-    """
-    Unzips the data file into tensor2tensor's temporary directory if it isn't
-    already there
-    """
-    corpus_filename = os.path.basename(DATA_TGZ)
-    corpus_filepath = os.path.join(tmp_dir, corpus_filename)
-
-    if os.path.exists(corpus_filepath):
-        return
-
-    Path(tmp_dir).mkdir(parents=True, exist_ok=True)
-
-    copyfile(DATA_TGZ, corpus_filepath)
-    with tarfile.open(corpus_filepath, 'r:gz') as corpus_tar:
-        corpus_tar.extractall(tmp_dir)
+from . import spiel_problems
 
 
 @registry.register_problem
-class LanguageModelProtoAlgonquian(text_problems.Text2SelfProblem,
-                                   util.SingleProcessProblem):
+class LanguageModelProtoAlgonquian(spiel_problems.LanguageModel):
     """
     Basic language model for Proto-Algonquian
     """
     @property
-    def is_generate_per_split(self):
+    def language_code(self):
         """
-        Train and eval data come separately
+        The code for the language used in the filesystem
         """
-        return True
-
-    @property
-    def num_training_examples(self):
-        """
-        Unused since is_generate_per_split is True
-        """
-
-    def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        """
-        Samples come from the unsegmented data files
-        """
-        split_files = {
-            problem.DatasetSplit.TRAIN: _train_data_filenames(tmp_dir, False),
-            problem.DatasetSplit.EVAL: _dev_data_filenames(tmp_dir, False)
-        }
-
-        _maybe_copy_corpus(tmp_dir)
-        files = split_files[dataset_split]
-        for filepath in files:
-            tf.logging.info(f'filepath = {filepath}')
-            for line in tf.gfile.Open(filepath):
-                yield {'targets': line}
-
-    @property
-    def vocab_type(self):
-        """
-        Base the language model on characters
-        """
-        return text_problems.VocabType.CHARACTER
+        return 'pa'
 
 
 @registry.register_problem
-class SegmentProtoAlgonquian(segmentation.SegmentationProblem):
+class SegmentProtoAlgonquian(spiel_problems.SegmentationProblem):
     """
     Segmentation task for Proto-Algonquian
     """
-    def source_data_files(self, data_dir, tmp_dir, dataset_split):
+    @property
+    def language_code(self):
         """
-        Data files are the unsegmented (source) and segmented (target) files
+        The code for the language used in the filesystem
         """
-        split_files = {
-            problem.DatasetSplit.TRAIN: _train_data_filenames(tmp_dir),
-            problem.DatasetSplit.EVAL: _dev_data_filenames(tmp_dir),
-        }
-
-        _maybe_copy_corpus(tmp_dir)
-        return split_files[dataset_split]
+        return 'pa'
 
 
 @registry.register_problem
-class RecognizeProtoAlgonquian(recognition.RecognitionProblem):
+class RecognizeProtoAlgonquian(spiel_problems.RecognitionProblem):
     """
     Recognizes the characters of proto-algonquian
     """
+    @property
+    def language_code(self):
+        """
+        The code for the language used in the filesystem
+        """
+        return 'pa'
+
     @property
     def min_size(self):
         """
@@ -167,60 +68,37 @@ class RecognizeProtoAlgonquian(recognition.RecognitionProblem):
         """
         return 1500
 
-    def source_data_files(self, data_dir, tmp_dir, dataset_split):
-        """
-        Only recognize the unsegmented data
-        """
-        return _train_data_filenames(tmp_dir, with_segmented=False)
-
 
 @registry.register_problem
-class MultitaskProtoAlgonquian(multi_problem.MultiProblem,
-                               util.SingleProcessProblem):
+class MultitaskProtoAlgonquian(spiel_problems.MultitaskProblem):
     """
     Defines a multitask problem that trains a language model and a segmentation
     task at the same time
     """
-    def __init__(self, was_reversed=False, was_copy=False):
-        super(MultitaskProtoAlgonquian, self).__init__(was_reversed, was_copy)
-        self.task_list.append(LanguageModelProtoAlgonquian())
-        self.task_list.append(SegmentProtoAlgonquian())
-
     @property
-    def vocab_type(self):
+    def problem_list(self):
         """
-        Use character level tokens
+        The list of tasks this problem handles
         """
-        return text_problems.VocabType.CHARACTER
-
-    def get_task_id(self, task_idx):
-        """
-        Helper method for determining a task's ID via the REPL. Simulates vocab
-        initialization so the correct ID can be determined.
-
-        :param task_idx: The index of the task (i.e. in the order it was
-                         entered in __init__)
-        :return: The task_id of the subtask
-        """
-        hparams = self.task_list[0].get_hparams()
-        vocab_size = hparams.vocabulary['targets'].vocab_size
-        self.update_task_ids(vocab_size)
-        return self.task_list[task_idx].task_id
-
-    @property
-    def num_training_examples(self):
-        """
-        Unused since is_generate_per_split is True
-        """
+        return [
+            LanguageModelProtoAlgonquian(),
+            SegmentProtoAlgonquian()
+        ]
 
 
 @registry.register_problem
-class MultitaskProtoAlgonquianWithNoise(MultitaskProtoAlgonquian):
+class MultitaskProtoAlgonquianWithNoise(spiel_problems.MultitaskProblem):
     """
     Defines a multitask problem that trains a language model, a segmentation
     task, and a recognition task
     """
-    def __init__(self, was_reversed=False, was_copy=False):
-        super(MultitaskProtoAlgonquianWithNoise, self).__init__(was_reversed,
-                                                                was_copy)
-        self.task_list.append(RecognizeProtoAlgonquian())
+    @property
+    def problem_list(self):
+        """
+        The list of tasks this problem handles
+        """
+        return [
+            LanguageModelProtoAlgonquian(),
+            SegmentProtoAlgonquian(),
+            RecognizeProtoAlgonquian()
+        ]
