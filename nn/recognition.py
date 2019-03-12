@@ -8,6 +8,8 @@ import tensorflow as tf
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import problem
 
+from . import util
+
 
 def _extract_vocab_data(source_files):
     """
@@ -30,7 +32,8 @@ def _extract_vocab_data(source_files):
     return list(vocab)
 
 
-class RecognitionProblem(text_problems.Text2TextProblem):
+class RecognitionProblem(text_problems.Text2TextProblem,
+                         util.SingleProcessProblem):
     """
     Defines a text to text problem that trains a network to recognize random
     sequences of characters as those random sequences of characters (i.e. an
@@ -42,6 +45,12 @@ class RecognitionProblem(text_problems.Text2TextProblem):
         Eval data is generated separately from train data.
         """
         return True
+
+    @property
+    def num_training_examples(self):
+        """
+        Unused since is_generate_per_split is True
+        """
 
     @property
     def vocab_type(self):

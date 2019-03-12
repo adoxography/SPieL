@@ -13,6 +13,7 @@ from tensor2tensor.data_generators import problem, text_problems, multi_problem
 from tensor2tensor.utils import registry
 
 from . import segmentation, recognition
+from . import util
 from . import data as data_module
 
 
@@ -79,7 +80,8 @@ def _maybe_copy_corpus(tmp_dir):
 
 
 @registry.register_problem
-class LanguageModelProtoAlgonquian(text_problems.Text2SelfProblem):
+class LanguageModelProtoAlgonquian(text_problems.Text2SelfProblem,
+                                   util.SingleProcessProblem):
     """
     Basic language model for Proto-Algonquian
     """
@@ -89,6 +91,12 @@ class LanguageModelProtoAlgonquian(text_problems.Text2SelfProblem):
         Train and eval data come separately
         """
         return True
+
+    @property
+    def num_training_examples(self):
+        """
+        Unused since is_generate_per_split is True
+        """
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
         """
@@ -167,7 +175,8 @@ class RecognizeProtoAlgonquian(recognition.RecognitionProblem):
 
 
 @registry.register_problem
-class MultitaskProtoAlgonquian(multi_problem.MultiProblem):
+class MultitaskProtoAlgonquian(multi_problem.MultiProblem,
+                               util.SingleProcessProblem):
     """
     Defines a multitask problem that trains a language model and a segmentation
     task at the same time

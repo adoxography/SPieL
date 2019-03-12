@@ -6,14 +6,23 @@ Base module for tasks involving morpheme segmentation
 import tensorflow as tf
 from tensor2tensor.data_generators import text_problems
 
+from . import util
 
-class SegmentationProblem(text_problems.Text2TextProblem):
+
+class SegmentationProblem(text_problems.Text2TextProblem,
+                          util.SingleProcessProblem):
     @property
     def is_generate_per_split(self):
         """
         Eval data is generated separately from train data.
         """
         return True
+
+    @property
+    def num_training_examples(self):
+        """
+        Unused since is_generate_per_split is True
+        """
 
     @property
     def vocab_type(self):
