@@ -15,12 +15,20 @@ git clone https://github.com/adoxography/SPieL
 ```
 
 2. Install the package
-
+- If you're not planning on using any of spiel's neural network dependencies, just use
 ```bash
-python setup.py install --user
+pip install -e .
+```
+- If do want to use neural networks and you have a GPU with CUDA cores available, use
+```bash
+pip install -e .[gpu]
+```
+- Otherwise, use
+```bash
+pip install -e .[cpu]
 ```
 
-If you need to uninstall it later, `pip uninstall spiel` will remove it from your system.
+If you want to uninstall it later, `pip uninstall spiel` will remove it from your system.
 
 ## Usage
 
