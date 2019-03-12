@@ -25,9 +25,12 @@ setup(name='spiel',
           'numpy==1.15.4',
           'scikit-learn==0.20.1',
           'sklearn-crfsuite',
-          'tensorflow==1.13.1',
           'tensor2tensor==1.13.0'
       ],
+      extras_require={
+          'cpu': ['tensorflow==1.13.1'],
+          'gpu': ['tensorflow-gpu==1.13.1']
+      },
       test_suite='nose.collector',
       tests_require=[
           'coverage==4.5.2'
