@@ -27,6 +27,7 @@ class SegmentProtoAlgonquian(spiel_problems.SegmentationProblem):
     """
     Segmentation task for Proto-Algonquian
     """
+    # pylint: disable=W0223
     @property
     def language_code(self):
         """
@@ -40,6 +41,7 @@ class RecognizeProtoAlgonquian(spiel_problems.RecognitionProblem):
     """
     Recognizes the characters of proto-algonquian
     """
+    # pylint: disable=W0223
     @property
     def language_code(self):
         """

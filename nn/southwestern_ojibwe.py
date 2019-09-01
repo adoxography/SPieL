@@ -27,6 +27,22 @@ class SegmentSouthwesternOjibwe(spiel_problems.SegmentationProblem):
     """
     Segmentation task for Southwestern Ojibwe
     """
+    # pylint: disable=W0223
+    @property
+    def language_code(self):
+        """
+        The code for the language used in the filesystem
+        """
+        return 'swo'
+
+
+@registry.register_problem
+class SegmentSouthwesternOjibweWithNoise(
+        spiel_problems.SegmentationNoiseProblem):
+    """
+    Segmentation task for Southwestern Ojibwe that mixes in noise
+    """
+    # pylint: disable=W0223
     @property
     def language_code(self):
         """
@@ -40,6 +56,7 @@ class RecognizeSouthwesternOjibwe(spiel_problems.RecognitionProblem):
     """
     Recognizes the characters of proto-algonquian
     """
+    # pylint: disable=W0223
     @property
     def language_code(self):
         """

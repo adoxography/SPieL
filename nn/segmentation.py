@@ -6,11 +6,8 @@ Base module for tasks involving morpheme segmentation
 import tensorflow as tf
 from tensor2tensor.data_generators import text_problems
 
-from . import util
 
-
-class SegmentationProblem(text_problems.Text2TextProblem,
-                          util.SingleProcessProblem):
+class SegmentationProblem(text_problems.Text2TextProblem):
     """
     Defines a segmentation problem, which is essentially a translation problem
     from unsegmented to segmented tokens.

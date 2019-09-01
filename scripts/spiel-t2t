@@ -9,7 +9,7 @@ eval_flag=''
 
 PROBLEM=''
 MODEL=transformer
-HPARAMS=transformer_base
+HPARAMS=transformer_spiel
 BEAM_SIZE=4
 ALPHA=0.6
 
@@ -77,29 +77,26 @@ if [ $train_flag ]; then
                 --model=$MODEL \
                 --output_dir=$TRAIN_DIR \
                 --hparams_set=$HPARAMS \
+                --hparams_range=transformer_spiel_range \
+                --autotune_objective="metrics-$PROBLEM/accuracy-per-sequence" \
+                --autotune_maximize \
+                --autotune_max_trials=40 \
+                --autotune_parallel_trials=4 \
+                --train_steps=7500 \
                 --t2t_usr_dir=$USR_DIR 2>&1 | grep -v Warning
 fi
 
 if [ $eval_flag ]; then
     echo "#============================= EVALUATING ==============================#"
-    # Make sure the outputs are starting from scratch
-    rm $TEST_FILE $GS_FILE 2>/dev/null
-
-    echo "k e s i t e n a w a r i" >> $TEST_FILE
-    echo "w a · p a n t a m e · k w e" >> $TEST_FILE
-    echo -e "k e - s i t - e n a w - a r i\nw a · p a n t - a m - e · k w - e" > $GS_FILE
-
     # Test the model
     t2t-decoder --data_dir=$DATA_DIR \
                 --problem=$PROBLEM \
                 --model=$MODEL \
                 --hparams_set=$HPARAMS \
                 --output_dir=$TRAIN_DIR \
-                --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA,multiproblem_task_id=259" \
-                --decode_from_file=$TEST_FILE \
+                --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" \
                 --decode_to_file=$RESULT_FILE \
                 --t2t_usr_dir=$USR_DIR 2>&1 | grep -v Warning
 
-    # See the output
-    cat $RESULT_FILE
+                # --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA,multiproblem_task_id=259" \
 fi
