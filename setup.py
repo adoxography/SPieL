@@ -22,7 +22,7 @@ setup(name='spiel',
           'nose-pathmunge'
       ],
       install_requires=[
-          'numpy==1.15.4',
+          'numpy==1.22.0',
           'scikit-learn==0.20.1',
           'sklearn-crfsuite',
           'tensor2tensor==1.13.0'
